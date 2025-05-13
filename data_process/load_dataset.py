@@ -21,8 +21,8 @@ def load_dataset(data_root='data', train=True):
         # 修改：正确解析 id 和 label
         sample_id, label = row['id'].split(',', 1)  # 逗号前为 id，逗号后为 label
         sample_dir = os.path.join(data_root, subset, sample_id)
-        captcha_path = os.path.join(sample_dir, f'{sample_id}.png')
-        single_char_paths = [os.path.join(sample_dir, f'{i}.png') for i in range(9)]
+        captcha_path = os.path.join(sample_dir, f'{sample_id}.jpg')
+        single_char_paths = [os.path.join(sample_dir, f'{i}.jpg') for i in range(9)]
 
         dataset.append({
             'id': sample_id,
