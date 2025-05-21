@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import random
+from skimage.feature import hog  # 导入 hog 函数
 from feature_extract.feature_analysis import extract_hog_features  # 导入特征提取函数
 
 def show_features_visualization(img_path):
@@ -40,7 +41,12 @@ def show_samples(dataset, num_samples=5):
     """
     selected_samples = random.sample(dataset, num_samples)
 
+    # 创建可视化窗口
+    plt.figure(figsize=(12, 6 * num_samples))
+    
     for i, sample in enumerate(selected_samples):
+        print(f"Sample {i+1}: {sample['id']}")
+
         captcha_img = cv2.imread(sample['captcha_path'], 0)  # 读取为灰度图
         
         # 处理标签
@@ -54,30 +60,28 @@ def show_samples(dataset, num_samples=5):
         single_char_imgs = [cv2.imread(p, 0) for p in sample['single_char_paths']]
         matched_chars = [single_char_imgs[idx] for idx in char_indices]
 
-        # 创建可视化窗口
-        plt.figure(figsize=(12, 6))
-        
         # 展示验证码图片
-        plt.subplot(3, num_samples, i+1)
+        total_cols = len(matched_chars) + 2  # 计算总列数（单字数 + 2（验证码+特征图））
+        plt.subplot(num_samples, total_cols, i * total_cols + 1)
         plt.imshow(captcha_img, cmap='gray')
         plt.title(f"CAPTCHA\nSample {i+1}: {sample['id']}")
         plt.axis('off')
 
         # 展示匹配的单字图片
         for j, img in enumerate(matched_chars):
-            plt.subplot(3, num_samples, num_samples + i * num_samples + j + 1)
+            plt.subplot(num_samples, total_cols, i * total_cols + j + 2)
             plt.imshow(img, cmap='gray')
             plt.title(f"Matched\nChar {j+1}: {char_indices[j]}")
             plt.axis('off')
             
         # 可视化特征
-        plt.subplot(3, num_samples, 2*num_samples + i + 1)
         features, hog_img = hog(cv2.resize(captcha_img, (64, 64)), 
                                orientations=9, 
                                pixels_per_cell=(8, 8),
                                cells_per_block=(2, 2),
                                block_norm='L2-Hys',
                                visualize=True)
+        plt.subplot(num_samples, total_cols, i * total_cols + total_cols)
         plt.imshow(hog_img, cmap='viridis')
         plt.title(f"HOG Features\n(Sample {i+1})")
         plt.axis('off')
