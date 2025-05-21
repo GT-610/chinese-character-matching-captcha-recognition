@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from skimage.feature import hog
+from tqdm import tqdm  # 新增进度条库导入
 
 def extract_hog_features(image):
     """提取HOG特征"""
@@ -52,7 +53,8 @@ def analyze_single_char_features(dataset):
     all_features = []
     all_labels = []
     
-    for sample in dataset:
+    # 添加带进度条的遍历
+    for sample in tqdm(dataset, desc="分析单字特征"):
         # 获取单字图片
         char_paths = sample['single_char_paths']
         char_indices = list(map(int, sample['label']))
@@ -68,7 +70,7 @@ def analyze_single_char_features(dataset):
             # 提取HOG特征
             features = extract_hog_features(img)
             all_features.append(features)
-            all_labels.append(char_indices[i])  # 使用实际字符作为标签
+            all_labels.append(char_indices[i])
             
     # 转换为numpy数组
     all_features = np.array(all_features)

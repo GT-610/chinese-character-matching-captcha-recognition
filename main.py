@@ -1,8 +1,11 @@
 from data_process.load_dataset import load_dataset
 # from data_process.show_samples import show_samples
 from feature_extract.show_samples import show_samples, show_features_visualization
-from feature_extract.feature_analysis import analyze_single_char_features
+from feature_extract.feature_analysis import analyze_single_char_features, extract_hog_features
 from models.knn_classifier import KNNCharClassifier, evaluate_accuracy
+
+import random
+import cv2
 
 # 新增KNN训练和评估部分
 def knn_experiment():
