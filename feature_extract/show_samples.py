@@ -12,15 +12,10 @@ def show_features_visualization(img_path):
     if img is None:
         return
     
-    # 提取HOG特征并可视化
+    # 提取HOG特征并可视化（修改为调用统一函数）
     resized_img = cv2.resize(img, (64, 64))
-    features, hog_img = hog(resized_img, 
-                          orientations=9, 
-                          pixels_per_cell=(8, 8),
-                          cells_per_block=(2, 2),
-                          block_norm='L2-Hys',
-                          visualize=True)
-    
+    features, hog_img = extract_hog_features(resized_img, visualize=True)  # 调用统一接口
+
     # 显示原始图像和HOG特征图
     plt.figure(figsize=(8, 4))
     plt.subplot(1, 2, 1)
@@ -74,13 +69,9 @@ def show_samples(dataset, num_samples=5):
             plt.title(f"Matched\nChar {j+1}: {char_indices[j]}")
             plt.axis('off')
             
-        # 可视化特征
-        features, hog_img = hog(cv2.resize(captcha_img, (64, 64)), 
-                               orientations=9, 
-                               pixels_per_cell=(8, 8),
-                               cells_per_block=(2, 2),
-                               block_norm='L2-Hys',
-                               visualize=True)
+        # 可视化特征（修改为调用统一函数）
+        features, hog_img = extract_hog_features(captcha_img, visualize=True)  # 调用统一接口
+        
         plt.subplot(num_samples, total_cols, i * total_cols + total_cols)
         plt.imshow(hog_img, cmap='viridis')
         plt.title(f"HOG Features\n(Sample {i+1})")

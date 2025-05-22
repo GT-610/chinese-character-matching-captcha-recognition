@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from skimage.feature import hog
 from tqdm import tqdm  # 新增进度条库导入
 
-def extract_hog_features(image):
+def extract_hog_features(image, visualize=False):
     """提取HOG特征"""
     # 确保输入是8位灰度图
     if len(image.shape) > 2:
@@ -17,13 +17,22 @@ def extract_hog_features(image):
     resized_img = cv2.resize(image, (64, 64))
     
     # 提取HOG特征
-    features = hog(resized_img, 
-                  orientations=9, 
-                  pixels_per_cell=(8, 8),
-                  cells_per_block=(2, 2),
-                  block_norm='L2-Hys',
-                  visualize=False)
-    return features
+    if visualize:
+        features, hog_img = hog(resized_img, 
+                              orientations=9, 
+                              pixels_per_cell=(8, 8),
+                              cells_per_block=(2, 2),
+                              block_norm='L2-Hys',
+                              visualize=True)
+        return features, hog_img  # 返回特征图用于可视化
+    else:
+        features = hog(resized_img, 
+                      orientations=9, 
+                      pixels_per_cell=(8, 8),
+                      cells_per_block=(2, 2),
+                      block_norm='L2-Hys',
+                      visualize=False)
+        return features  # 保持原有返回格式
 
 def visualize_feature_distribution(features, labels, title="Feature Distribution"):
     """使用PCA和t-SNE可视化特征分布"""

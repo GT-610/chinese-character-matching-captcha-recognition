@@ -53,13 +53,13 @@ if __name__ == "__main__":
     # single_char_features, single_char_labels = analyze_single_char_features(dataset)
 
     # 3. 特征分析 - 可视化具体特征
-    # print("Visualizing HOG features...")
-    # show_features_visualization(dataset[0]['single_char_paths'][0]) # 展示单个字符的特征提取效果
+    print("Visualizing HOG features...")
+    show_features_visualization(dataset[0]['single_char_paths'][0]) # 展示单个字符的特征提取效果
 
     # 4. 随机展示样本及其特征分析
     # print("Showing sample visualizations...")
     # show_samples(dataset, num_samples=3)
     
     # 5. KNN分类实验
-    print("\n运行KNN分类实验...")
-    knn_experiment()
+    # print("\n运行KNN分类实验...")
+    # knn_experiment()
