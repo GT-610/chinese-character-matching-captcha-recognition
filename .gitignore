@@ -182,3 +182,6 @@ data/
 
 # Figures
 figures/
+
+# Pre-trained models
+best_cnn.pth
