@@ -55,14 +55,15 @@ def analyze_single_char_features(dataset):
     
     # 添加带进度条的遍历
     for sample in tqdm(dataset, desc="分析单字特征"):
-        # 获取单字图片
-        char_paths = sample['single_char_paths']
+        # 修复特征-标签对应关系
         char_indices = list(map(int, sample['label']))
         
-        for i, path in enumerate(char_paths):
-            if i >= len(char_indices):  # 防止索引越界
-                break
+        # 遍历验证码中的4个字符索引（而非所有单字路径）
+        for idx in char_indices:
+            if idx >= len(sample['single_char_paths']):
+                continue  # 防止索引越界
                 
+            path = sample['single_char_paths'][idx]
             img = cv2.imread(path, 0)  # 读取为灰度图
             if img is None:
                 continue
@@ -70,14 +71,13 @@ def analyze_single_char_features(dataset):
             # 提取HOG特征
             features = extract_hog_features(img)
             all_features.append(features)
-            all_labels.append(char_indices[i])
+            all_labels.append(idx)  # 标签直接使用字符索引
             
     # 转换为numpy数组
     all_features = np.array(all_features)
     all_labels = np.array(all_labels)
     
     # 可视化特征分布
-    visualize_feature_distribution(all_features, all_labels, 
-                                "Single Character Feature Distribution")
+    # visualize_feature_distribution(all_features, all_labels, "Single Character Feature Distribution")
     
     return all_features, all_labels

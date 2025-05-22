@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
+import cv2
 
 def load_dataset(data_root='data', train=True):
     """
@@ -18,8 +20,11 @@ def load_dataset(data_root='data', train=True):
     label_df = pd.read_csv(os.path.join(data_root, label_file), sep=' ', header=None, names=['id', 'label'])
 
     for _, row in label_df.iterrows():
-        # 修改：正确解析 id 和 label
-        sample_id, label = row['id'].split(',', 1)  # 逗号前为 id，逗号后为 label
+        # 修复标签解析问题
+        parts = row['id'].split(',', 1)  # 只分割第一个逗号
+        if len(parts) != 2:
+            continue  # 跳过格式错误的行
+        sample_id, label = parts
         sample_dir = os.path.join(data_root, subset, sample_id)
         captcha_path = os.path.join(sample_dir, f'{sample_id}.jpg')
         single_char_paths = [os.path.join(sample_dir, f'{i}.jpg') for i in range(9)]
@@ -32,3 +37,18 @@ def load_dataset(data_root='data', train=True):
         })
 
     return dataset
+
+# 通过查看标签索引和单字读取结果，验证样本读取是否正常
+def debug_sample(sample):
+    print(f"样本ID: {sample['id']}")
+    print(f"标签索引: {sample['label']}")
+    
+    # 显示所有单字图片
+    plt.figure(figsize=(12,3))
+    for i in range(9):
+        img = cv2.imread(sample['single_char_paths'][i],0)
+        plt.subplot(1,9,i+1)
+        plt.imshow(img, cmap='gray')
+        plt.title(f"idx={i}")
+        plt.axis('off')
+    plt.show()

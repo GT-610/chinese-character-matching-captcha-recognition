@@ -5,25 +5,30 @@ from feature_extract.feature_analysis import extract_hog_features
 class KNNCharClassifier:
     def __init__(self, k=5):
         self.k = k
-        self.X_train = None  # 存储训练特征
-        self.y_train = None  # 存储训练标签
+        self.class_weights = None  # 用于类别平衡
     
     def train(self, features, labels):
         """训练KNN分类器（实际是存储特征数据）"""
         self.X_train = np.array(features)
         self.y_train = np.array(labels)
+        # 计算类别权重
+        class_counts = Counter(labels)
+        total = sum(class_counts.values())
+        self.class_weights = {cls: total/count for cls, count in class_counts.items()}
     
     def _predict_single(self, x):
         """预测单个样本"""
-        # 计算欧氏距离
-        distances = np.sqrt(np.sum((self.X_train - x) ** 2, axis=1))
+        # 改进距离计算（曼哈顿距离）
+        distances = np.sum(np.abs(self.X_train - x), axis=1)
         # 获取最近的k个样本索引
         k_indices = np.argsort(distances)[:self.k]
-        # 获取最近k个样本的标签
-        k_nearest_labels = self.y_train[k_indices]
-        # 多数投票
-        most_common = Counter(k_nearest_labels).most_common(1)
-        return most_common[0][0]
+        # 加权投票
+        weighted_votes = {}
+        for idx in k_indices:
+            label = self.y_train[idx]
+            weight = 1 / (distances[idx] + 1e-5) * self.class_weights.get(label, 1)
+            weighted_votes[label] = weighted_votes.get(label, 0) + weight
+        return max(weighted_votes, key=weighted_votes.get)
     
     def predict_captcha(self, single_char_features):
         """预测整个验证码（4个字符）"""

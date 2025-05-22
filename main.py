@@ -1,8 +1,8 @@
-from data_process.load_dataset import load_dataset
-# from data_process.show_samples import show_samples
+from data_process.load_dataset import load_dataset, debug_sample
 from feature_extract.show_samples import show_samples, show_features_visualization
 from feature_extract.feature_analysis import analyze_single_char_features, extract_hog_features
 from models.knn_classifier import KNNCharClassifier, evaluate_accuracy
+
 
 import random
 import cv2
@@ -36,7 +36,6 @@ def knn_experiment():
         for j, path in enumerate(sample['single_char_paths'][:4]):
             img = cv2.imread(path, 0)
             char_features.append(extract_hog_features(img))
-            print(f"  字符{j+1}特征提取完成", end=' | ')
         
         # 预测和真实标签
         pred = knn.predict_captcha(char_features)
@@ -61,6 +60,6 @@ if __name__ == "__main__":
     # print("Showing sample visualizations...")
     # show_samples(dataset, num_samples=3)
     
-    # 新增KNN实验
+    # 5. KNN分类实验
     print("\n运行KNN分类实验...")
     knn_experiment()
