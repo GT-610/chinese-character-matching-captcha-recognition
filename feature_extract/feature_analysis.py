@@ -13,8 +13,17 @@ def extract_hog_features(image, visualize=False):
     if len(image.shape) > 2:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
+    # 图像预处理
+    
+    # 二值化：增强对比度
+    _, binary = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    
+    # 形态学操作：去除细小线条干扰
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    morphed = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
+    
     # 调整图像尺寸到统一大小
-    resized_img = cv2.resize(image, (64, 64))
+    resized_img = cv2.resize(morphed, (64, 64))
     
     # 提取HOG特征
     if visualize:
@@ -33,6 +42,7 @@ def extract_hog_features(image, visualize=False):
                       block_norm='L2-Hys',
                       visualize=False)
         return features  # 保持原有返回格式
+
 
 def visualize_feature_distribution(features, labels, title="Feature Distribution"):
     """使用PCA和t-SNE可视化特征分布"""
