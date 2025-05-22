@@ -24,7 +24,8 @@ def knn_experiment():
     # 评估准确率
     print("正在进行准确率评估...")
     accuracy = evaluate_accuracy(knn, test_features, test_labels)
-    print(f"\nKNN分类器单字准确率: {accuracy:.2%}\n")
+    print(f"\nKNN分类器单字准确率: {accuracy['char_accuracy']:.2%}\n")
+    print(f"KNN分类器验证码准确率: {accuracy['captcha_accuracy']:.2%}\n")
     
     # 随机测试几个验证码
     test_dataset = load_dataset(data_root='data', train=False)
@@ -36,13 +37,19 @@ def knn_experiment():
         for j, path in enumerate(sample['single_char_paths'][:4]):
             img = cv2.imread(path, 0)
             char_features.append(extract_hog_features(img))
-        
-        # 预测和真实标签
+        # pred 的顺序与 char_features 的顺序一致，即验证码中字符的排列顺序
         pred = knn.predict_captcha(char_features)
+        # true 是 sample['label'] 的字符顺序，也与验证码中字符的排列顺序一致
         true = list(map(int, sample['label']))
+        
+        # 新增对比标记
+        comparison = ['√' if p == t else '×' for p, t in zip(pred, true)]
+        
         print(f"\n样本 {sample['id']}:")
         print(f"真实标签: {true}")
-        print(f"预测结果: {pred}\n{'='*40}")
+        print(f"预测结果: {pred}")
+        print(f"对比结果: {comparison}")  # 新增对比行
+        print(f"{'='*40}")
 
 if __name__ == "__main__":
     # 1. 读取整个数据集

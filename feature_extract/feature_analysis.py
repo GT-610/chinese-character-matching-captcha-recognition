@@ -30,7 +30,7 @@ def extract_hog_features(image, visualize=False):
     if visualize:
         features, hog_img = hog(processed_img, 
                               orientations=16,  # 提升至16方向（适应汉字复杂结构）
-                              pixels_per_cell=(32, 32),  # 放大单元尺寸（匹配汉字笔画粗细）
+                              pixels_per_cell=(16, 16),  # 调整单元尺寸（原32x32→16x16）
                               cells_per_block=(2, 2),
                               block_norm='L2-Hys',
                               visualize=True)
@@ -38,7 +38,7 @@ def extract_hog_features(image, visualize=False):
     else:
         features = hog(processed_img, 
                       orientations=16,
-                      pixels_per_cell=(32, 32),
+                      pixels_per_cell=(16, 16),  # 同步调整非可视化模式参数
                       cells_per_block=(2, 2),
                       block_norm='L2-Hys',
                       visualize=False)

@@ -36,14 +36,35 @@ class KNNCharClassifier:
             raise ValueError("需要提供4个字符的特征向量")
         return [self._predict_single(feature) for feature in single_char_features]
 
+def evaluate_captcha_accuracy(classifier, test_dataset):
+    correct = 0
+    total = len(test_dataset)
+    print("验证码整体准确率评估进度：")
+    for sample in tqdm(test_dataset, total=total):
+        # 提取4个字符的特征
+        char_features = [extract_hog_features(cv2.imread(path, 0)) for path in sample['single_char_paths'][:4]]
+        # 预测验证码
+        pred = classifier.predict_captcha(char_features)
+        # 真实标签
+        true = list(map(int, sample['label']))
+        # 比较整个验证码是否完全一致
+        if pred == true:
+            correct += 1
+    return correct / total
+
 def evaluate_accuracy(classifier, test_features, test_labels):
     """评估分类器准确率"""
-    from tqdm import tqdm  # 新增进度条库导入
+    from tqdm import tqdm
     
     correct = 0
+    captcha_correct = 0  # 新增：完全正确的验证码计数
     print("评估进度：")
     for features, true_label in tqdm(zip(test_features, test_labels), total=len(test_labels)):
         pred = classifier._predict_single(features)
         if pred == true_label:
             correct += 1
-    return correct / len(test_labels)
+    # 新增验证码级别准确率计算
+    return {
+        'char_accuracy': correct / len(test_labels),
+        'captcha_accuracy': captcha_correct / len(test_labels)
+    }
