@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import random
 from skimage.feature import hog  # 导入 hog 函数
-from feature_extract.feature_analysis import extract_hog_features  # 导入特征提取函数
+from feature_extract.feature_analysis import extract_hog_features, preprocess_image  # 导入预处理函数
 
 def show_features_visualization(img_path):
     """可视化单张图片的特征提取效果"""
@@ -12,18 +12,25 @@ def show_features_visualization(img_path):
     if img is None:
         return
     
-    # 提取HOG特征并可视化（修改为调用统一函数）
-    resized_img = cv2.resize(img, (64, 64))
-    features, hog_img = extract_hog_features(resized_img, visualize=True)  # 调用统一接口
+    # 调用预处理函数
+    processed_img = preprocess_image(img)
+    
+    # 提取HOG特征并可视化
+    features, hog_img = extract_hog_features(processed_img, visualize=True)
 
-    # 显示原始图像和HOG特征图
-    plt.figure(figsize=(8, 4))
-    plt.subplot(1, 2, 1)
-    plt.imshow(resized_img, cmap='gray')
+    # 显示原始图像、处理后的图像和HOG特征图
+    plt.figure(figsize=(12, 4))
+    plt.subplot(1, 3, 1)
+    plt.imshow(img, cmap='gray')
     plt.title('Original Image')
     plt.axis('off')
     
-    plt.subplot(1, 2, 2)
+    plt.subplot(1, 3, 2)
+    plt.imshow(processed_img, cmap='gray')  # 使用预处理后的图像
+    plt.title('Processed Image (Before HOG)')
+    plt.axis('off')
+    
+    plt.subplot(1, 3, 3)
     plt.imshow(hog_img, cmap='viridis')
     plt.title('HOG Features')
     plt.axis('off')

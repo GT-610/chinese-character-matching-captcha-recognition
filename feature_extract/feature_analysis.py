@@ -7,42 +7,42 @@ import matplotlib.pyplot as plt
 from skimage.feature import hog
 from tqdm import tqdm  # 新增进度条库导入
 
+def preprocess_image(image):
+    """封装图像预处理操作"""
+    
+    # 二值化 + 反转
+    _, binary = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    inverted_binary = cv2.bitwise_not(binary)
+    
+    # 调整大小
+    resized_img = cv2.resize(inverted_binary, (64, 64))
+    
+    return resized_img
+
 def extract_hog_features(image, visualize=False):
     """提取HOG特征"""
-    # 确保输入是8位灰度图
     if len(image.shape) > 2:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
-    # 图像预处理
+    # 调用预处理函数
+    processed_img = preprocess_image(image)
     
-    # 二值化：增强对比度
-    _, binary = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    
-    # 形态学操作：去除细小线条干扰
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    morphed = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
-    
-    # 调整图像尺寸到统一大小
-    resized_img = cv2.resize(morphed, (64, 64))
-    
-    # 提取HOG特征
     if visualize:
-        features, hog_img = hog(resized_img, 
-                              orientations=9, 
-                              pixels_per_cell=(8, 8),
+        features, hog_img = hog(processed_img, 
+                              orientations=16,  # 提升至16方向（适应汉字复杂结构）
+                              pixels_per_cell=(32, 32),  # 放大单元尺寸（匹配汉字笔画粗细）
                               cells_per_block=(2, 2),
                               block_norm='L2-Hys',
                               visualize=True)
-        return features, hog_img  # 返回特征图用于可视化
+        return features, hog_img
     else:
-        features = hog(resized_img, 
-                      orientations=9, 
-                      pixels_per_cell=(8, 8),
+        features = hog(processed_img, 
+                      orientations=16,
+                      pixels_per_cell=(32, 32),
                       cells_per_block=(2, 2),
                       block_norm='L2-Hys',
                       visualize=False)
-        return features  # 保持原有返回格式
-
+        return features
 
 def visualize_feature_distribution(features, labels, title="Feature Distribution"):
     """使用PCA和t-SNE可视化特征分布"""
