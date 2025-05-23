@@ -45,4 +45,5 @@ To run this project, you will need the following dependencies:
 1. Clone the repo.
 2. It's recommanded to create a virtual environment before proceeding.
 3. Install the required packages. You can do this by running `pip install -r requirements.txt`.
+4. Check and uncomment the appropriate section in `main.py`.
 4. Run `python main.py`.
