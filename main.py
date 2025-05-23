@@ -1,4 +1,5 @@
 from data_process.load_dataset import load_dataset
+from data_process.split_captcha import plot_split_results
 from feature_extract.show_samples import show_samples, show_features_visualization
 from feature_extract.feature_analysis import analyze_single_char_features
 from models.knn_classifier import KNNCharClassifier, evaluate_accuracy
@@ -13,6 +14,8 @@ if __name__ == "__main__":
     # 1. 读取整个数据集
     dataset = load_dataset(data_root='data')
 
+    # plot_split_results(dataset)
+
     # 2. 特征分析 - 可视化特征分布
     # print("Analyzing feature distribution...")
     # single_char_features, single_char_labels = analyze_single_char_features(dataset)
@@ -22,13 +25,13 @@ if __name__ == "__main__":
     # show_features_visualization(dataset[random.randint(0, 9000)]['single_char_paths'][0]) # 展示单个字符的特征提取效果
 
     # 4. 随机展示样本及其特征分析
-    print("Showing sample visualizations...")
-    show_samples(dataset, num_samples=3)
+    # print("Showing sample visualizations...")
+    # show_samples(dataset, num_samples=3)
     
     # 5. KNN分类实验
     # print("\n运行KNN分类实验...")
     # knn_experiment()
 
     # 6. CNN分类实验
-    # print("\n运行CNN分类实验...")
-    # cnn_experiment()
+    print("\n运行CNN分类实验...")
+    cnn_experiment()

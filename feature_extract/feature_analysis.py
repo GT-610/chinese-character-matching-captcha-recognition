@@ -7,17 +7,8 @@ import matplotlib.pyplot as plt
 from skimage.feature import hog
 from tqdm import tqdm  # 新增进度条库导入
 
-def preprocess_image(image):
-    """封装图像预处理操作"""
-    
-    # 二值化 + 反转
-    _, binary = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    inverted_binary = cv2.bitwise_not(binary)
-    
-    # 调整大小
-    resized_img = cv2.resize(inverted_binary, (64, 64))
-    
-    return resized_img
+# 导入新的预处理函数
+from data_process.image_preprocessing import preprocess_image
 
 def extract_hog_features(image, visualize=False):
     """提取HOG特征"""
@@ -30,7 +21,7 @@ def extract_hog_features(image, visualize=False):
     if visualize:
         features, hog_img = hog(processed_img, 
                               orientations=16,  # 提升至16方向（适应汉字复杂结构）
-                              pixels_per_cell=(16, 16),  # 调整单元尺寸（原32x32→16x16）
+                              pixels_per_cell=(32, 32),  # 放大单元尺寸（匹配汉字笔画粗细）
                               cells_per_block=(2, 2),
                               block_norm='L2-Hys',
                               visualize=True)
@@ -38,7 +29,7 @@ def extract_hog_features(image, visualize=False):
     else:
         features = hog(processed_img, 
                       orientations=16,
-                      pixels_per_cell=(16, 16),  # 同步调整非可视化模式参数
+                      pixels_per_cell=(32, 32),
                       cells_per_block=(2, 2),
                       block_norm='L2-Hys',
                       visualize=False)

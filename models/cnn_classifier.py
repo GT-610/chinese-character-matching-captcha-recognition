@@ -6,8 +6,10 @@ import cv2
 import numpy as np
 import torch.nn.functional as F
 
+from data_process.split_captcha import split_captcha
+
 class CharDataset(Dataset):
-    """验证码数据集（整体图像+多字符标签）"""
+    """验证码数据集（分割后的单字图像+多字符标签）"""
     def __init__(self, dataset, transform=None):
         self.samples = dataset  # 直接使用原始数据集
         self.transform = transform
@@ -19,24 +21,37 @@ class CharDataset(Dataset):
         sample = self.samples[idx]
         # 加载验证码图像
         img = cv2.imread(sample['captcha_path'])
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 确保图像为灰度图像
         
-        if self.transform:
-            img = self.transform(img)
-            
+        # 分割验证码图像为四个部分
+        split_images = split_captcha(img, num_splits=4)
+        
+        # 提取每个部分的特征向量
+        features = []
+        for split_img in split_images:
+            if self.transform:
+                split_img = self.transform(split_img)
+            features.append(split_img)
+        
+        # 将 features 转换为张量
+        features_tensor = torch.stack(features)  # 将列表转换为张量
+        
         # 将标签转换为字符索引数组
         label_str = sample['label']
         label_indices = [int(c) for c in label_str]  # 转换为4位数字索引
         
-        return img, torch.tensor(label_indices)  # 返回完整标签序列
+        return features_tensor, torch.tensor(label_indices)  # 返回张量和完整标签序列
 
 class CNNCharClassifier(nn.Module):
     """基于ResNet18的多字符验证码识别模型"""
-    def __init__(self, num_classes=9, num_positions=4):  # 修正为10类
+    def __init__(self, num_classes=10, num_positions=4):  # 修正为10类
         super().__init__()
         self.base_model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
         
-        # 删除原始的 fc 层，替换为 Identity 层以直接获取特征
+        # 修改 ResNet18 的第一层卷积层，使其接受单通道输入
+        self.base_model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        
+        # 删除原始的 fc 层，替换为 Identity 层以获取特征
         self.base_model.fc = nn.Identity()
         
         # 替换最后的全连接层为多任务输出
@@ -50,12 +65,13 @@ class CNNCharClassifier(nn.Module):
         ])
 
     def forward(self, x):
-        # 调整输入大小以适应150x45的图片
-        x = F.interpolate(x, size=(224, 224), mode='bilinear', align_corners=False)
-        features = self.base_model(x)
-        # 每个位置共享特征提取器
-        outputs = [classifier(features) for classifier in self.classifiers]
-        return torch.stack(outputs, dim=1)  # 返回形状: (batch_size, 4, 10)
+        """前向传播，分别处理四个分割后的特征向量"""
+        outputs = []
+        for i in range(4):  # 遍历每个分割部分
+            feature = self.base_model(x[:, i, ...])  # 提取每个分割部分的特征
+            output = self.classifiers[i](feature)  # 分类器处理对应部分的特征
+            outputs.append(output)
+        return torch.stack(outputs, dim=1)  # 返回形状为 (batch_size, num_splits, num_classes)
 
 def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
     criterion = nn.CrossEntropyLoss()
@@ -65,7 +81,7 @@ def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
     model.train()
     for epoch in range(epochs):
         for inputs, labels in train_loader:
-            inputs = inputs.to(device)
+            inputs = inputs.to(device)  # 确保输入张量移动到设备
             labels = labels.to(device)  # 形状: (batch_size, 4)
             
             optimizer.zero_grad()
@@ -92,7 +108,7 @@ def evaluate_cnn(model, loader, device='cuda'):
     
     with torch.no_grad():
         for inputs, labels in loader:
-            inputs = inputs.to(device)
+            inputs = inputs.to(device)  # 确保输入张量移动到设备
             labels = labels.to(device)  # 形状: (batch_size, 4)
             
             outputs = model(inputs)  # 形状: (batch_size, 4, 9)
