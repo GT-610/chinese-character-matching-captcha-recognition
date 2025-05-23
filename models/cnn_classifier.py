@@ -4,6 +4,7 @@ from torchvision import models
 from torch.utils.data import Dataset, DataLoader
 import cv2
 import numpy as np
+import torch.nn.functional as F
 
 class CharDataset(Dataset):
     """验证码数据集（整体图像+多字符标签）"""
@@ -31,22 +32,30 @@ class CharDataset(Dataset):
 
 class CNNCharClassifier(nn.Module):
     """基于ResNet18的多字符验证码识别模型"""
-    def __init__(self, num_classes=9, num_positions=4):
+    def __init__(self, num_classes=9, num_positions=4):  # 修正为10类
         super().__init__()
         self.base_model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
-        # 替换最后的全连接层为恒等映射，获取 512 维特征
-        self.base_model.fc = nn.Identity()  # 修改此处
+        
+        # 删除原始的 fc 层，替换为 Identity 层以直接获取特征
+        self.base_model.fc = nn.Identity()
+        
         # 替换最后的全连接层为多任务输出
         self.classifiers = nn.ModuleList([
-            nn.Linear(512, num_classes)  # 修改输入维度为 512
-            for _ in range(num_positions)
+            nn.Sequential(  # 增加特征投影层
+                nn.Dropout(0.5),  # 添加Dropout防止过拟合
+                nn.Linear(512, 256),  # 输入维度改为512
+                nn.ReLU(),
+                nn.Linear(256, num_classes)
+            ) for _ in range(num_positions)
         ])
-    
+
     def forward(self, x):
+        # 调整输入大小以适应150x45的图片
+        x = F.interpolate(x, size=(224, 224), mode='bilinear', align_corners=False)
         features = self.base_model(x)
         # 每个位置共享特征提取器
         outputs = [classifier(features) for classifier in self.classifiers]
-        return torch.stack(outputs, dim=1)  # 返回形状: (batch_size, 4, 9)
+        return torch.stack(outputs, dim=1)  # 返回形状: (batch_size, 4, 10)
 
 def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
     criterion = nn.CrossEntropyLoss()
