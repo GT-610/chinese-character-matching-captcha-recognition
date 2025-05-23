@@ -1,4 +1,4 @@
-from data_process.load_dataset import load_dataset, debug_sample
+from data_process.load_dataset import load_dataset
 from feature_extract.show_samples import show_samples, show_features_visualization
 from feature_extract.feature_analysis import analyze_single_char_features
 from models.knn_classifier import KNNCharClassifier, evaluate_accuracy
@@ -18,8 +18,8 @@ if __name__ == "__main__":
     # single_char_features, single_char_labels = analyze_single_char_features(dataset)
 
     # 3. 特征分析 - 可视化具体特征
-    print("Visualizing HOG features...")
-    show_features_visualization(dataset[random.randint(0, 9000)]['single_char_paths'][0]) # 展示单个字符的特征提取效果
+    # print("Visualizing HOG features...")
+    # show_features_visualization(dataset[random.randint(0, 9000)]['single_char_paths'][0]) # 展示单个字符的特征提取效果
 
     # 4. 随机展示样本及其特征分析
     # print("Showing sample visualizations...")

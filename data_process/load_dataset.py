@@ -1,7 +1,5 @@
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
-import cv2
 
 def load_dataset(data_root='data', train=True):
     """
@@ -9,8 +7,7 @@ def load_dataset(data_root='data', train=True):
     每个样本是一个字典，包含：
     - 'id': 样本ID（字符串）
     - 'captcha_path': 验证码图片路径
-    - 'single_char_paths': 单字图片路径列表（长度为9）
-    - 'label': 验证码中4个字符对应的单字索引（字符串）
+    - 'label': 验证码中4个字符对应的真实字符序列（字符串）
     """
     # 根据 train 参数选择子目录和标签文件
     subset = 'train' if train else 'test'
@@ -20,35 +17,18 @@ def load_dataset(data_root='data', train=True):
     label_df = pd.read_csv(os.path.join(data_root, label_file), sep=' ', header=None, names=['id', 'label'])
 
     for _, row in label_df.iterrows():
-        # 修复标签解析问题
-        parts = row['id'].split(',', 1)  # 只分割第一个逗号
+        parts = row['id'].split(',', 1)
         if len(parts) != 2:
             continue  # 跳过格式错误的行
+            
         sample_id, label = parts
         sample_dir = os.path.join(data_root, subset, sample_id)
         captcha_path = os.path.join(sample_dir, f'{sample_id}.jpg')
-        single_char_paths = [os.path.join(sample_dir, f'{i}.jpg') for i in range(9)]
 
         dataset.append({
             'id': sample_id,
             'captcha_path': captcha_path,
-            'single_char_paths': single_char_paths,
-            'label': label
+            'label': label  # 直接使用原始字符标签（如"0123"）
         })
 
     return dataset
-
-# 通过查看标签索引和单字读取结果，验证样本读取是否正常
-def debug_sample(sample):
-    print(f"样本ID: {sample['id']}")
-    print(f"标签索引: {sample['label']}")
-    
-    # 显示所有单字图片
-    plt.figure(figsize=(12,3))
-    for i in range(9):
-        img = cv2.imread(sample['single_char_paths'][i],0)
-        plt.subplot(1,9,i+1)
-        plt.imshow(img, cmap='gray')
-        plt.title(f"idx={i}")
-        plt.axis('off')
-    plt.show()
