@@ -28,7 +28,7 @@ def load_dataset(data_root='data', train=True):
         dataset.append({
             'id': sample_id,
             'captcha_path': captcha_path,
-            'label': label  # 直接使用原始字符标签（如"0123"）
+            'label': label
         })
 
     return dataset

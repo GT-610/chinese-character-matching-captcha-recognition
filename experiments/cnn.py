@@ -8,12 +8,12 @@ import csv
 import matplotlib.pyplot as plt
 
 def cnn_experiment():
-    # 数据预处理：调整为150x45的输入尺寸
+    # 数据预处理：调整为150x45（验证码大小）的输入尺寸
     transform = transforms.Compose([
         transforms.ToPILImage(),
-        transforms.Resize((150, 45)),  # 匹配验证码图片尺寸
+        transforms.Resize((150, 45)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5], std=[0.5])  # 修改为单通道灰度图像的归一化参数
+        transforms.Normalize(mean=[0.5], std=[0.5])
     ])
 
     # 加载数据集
@@ -26,7 +26,7 @@ def cnn_experiment():
 
     # 初始化模型
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = CNNCharClassifier(num_classes=10, num_positions=4).to(device)  # 修改为10类和4个位置
+    model = CNNCharClassifier(num_classes=10, num_positions=4).to(device)
 
     # 训练模型
     print("开始训练CNN模型...")
@@ -45,7 +45,6 @@ def cnn_experiment():
     save_results(val_accs, final_acc)
 
 def save_results(val_accs, final_acc):
-    # 确保 results 文件夹存在
     os.makedirs('results', exist_ok=True)
 
     # 保存验证准确率到 CSV 文件

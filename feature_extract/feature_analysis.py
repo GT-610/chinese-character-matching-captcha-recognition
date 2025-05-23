@@ -5,9 +5,8 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 from skimage.feature import hog
-from tqdm import tqdm  # 新增进度条库导入
+from tqdm import tqdm
 
-# 导入新的预处理函数
 from data_process.image_preprocessing import preprocess_image
 
 def extract_hog_features(image, visualize=False):
@@ -15,13 +14,13 @@ def extract_hog_features(image, visualize=False):
     if len(image.shape) > 2:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
-    # 调用预处理函数
+    # 预处理
     processed_img = preprocess_image(image)
     
     if visualize:
         features, hog_img = hog(processed_img, 
-                              orientations=16,  # 提升至16方向（适应汉字复杂结构）
-                              pixels_per_cell=(32, 32),  # 放大单元尺寸（匹配汉字笔画粗细）
+                              orientations=16,
+                              pixels_per_cell=(32, 32),
                               cells_per_block=(2, 2),
                               block_norm='L2-Hys',
                               visualize=True)
@@ -63,12 +62,11 @@ def analyze_single_char_features(dataset):
     all_features = []
     all_labels = []
     
-    # 添加带进度条的遍历
+    # 带进度条的遍历
     for sample in tqdm(dataset, desc="分析单字特征"):
-        # 修复特征-标签对应关系
         char_indices = list(map(int, sample['label']))
         
-        # 遍历验证码中的4个字符索引（而非所有单字路径）
+        # 遍历验证码中的4个字符索引
         for idx in char_indices:
             if idx >= len(sample['single_char_paths']):
                 continue  # 防止索引越界
@@ -81,7 +79,7 @@ def analyze_single_char_features(dataset):
             # 提取HOG特征
             features = extract_hog_features(img)
             all_features.append(features)
-            all_labels.append(idx)  # 标签直接使用字符索引
+            all_labels.append(idx) 
             
     # 转换为numpy数组
     all_features = np.array(all_features)

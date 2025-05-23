@@ -33,16 +33,13 @@ def knn_experiment():
         for j, path in enumerate(sample['single_char_paths'][:4]):
             img = cv2.imread(path, 0)
             char_features.append(extract_hog_features(img))
-        # pred 的顺序与 char_features 的顺序一致，即验证码中字符的排列顺序
         pred = knn.predict_captcha(char_features)
-        # true 是 sample['label'] 的字符顺序，也与验证码中字符的排列顺序一致
         true = list(map(int, sample['label']))
         
-        # 新增对比标记
         comparison = ['√' if p == t else '×' for p, t in zip(pred, true)]
         
         print(f"\n样本 {sample['id']}:")
         print(f"真实标签: {true}")
         print(f"预测结果: {pred}")
-        print(f"对比结果: {comparison}")  # 新增对比行
+        print(f"对比结果: {comparison}")
         print(f"{'='*40}")

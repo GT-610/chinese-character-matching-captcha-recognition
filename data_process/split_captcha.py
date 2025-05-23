@@ -37,8 +37,8 @@ def plot_split_results(dataset, num_samples=5):
         # 调用预处理函数
         processed_img = preprocess_image(captcha_img)
         
-        # 分割验证码
-        splits = split_captcha(processed_img)  # 分割预处理后的图片
+        # 分割预处理后的图片
+        splits = split_captcha(processed_img)
 
         # 绘制原图
         plt.subplot(num_samples, 5, i * 5 + 1)
