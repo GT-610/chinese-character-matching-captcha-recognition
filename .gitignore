@@ -185,3 +185,6 @@ figures/
 
 # Pre-trained models
 best_cnn.pth
+
+# Results
+results/

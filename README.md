@@ -4,31 +4,21 @@ This project is a part of my Machine Learning Course Design, focusing on the rec
 
 As the course is over, I decided to open-source the project, allowing others to learn from and potentially contribute to the project.
 
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Project Structure](#structure)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Dataset](#dataset)
-- [Model Architecture](#model-architecture)
-- [Training](#training)
-- [Evaluation](#evaluation)
-- [Results](#results)
-- [Contributing](#contributing)
-- [License](#license)
-
 ## Introduction
 
 The project aims to solve the problem of recognizing Chinese captcha images, which are commonly used in web applications for security purposes. By using machine learning techniques, we aim to develop a robust system that can accurately transcribe Chinese characters from captcha images.
 
+Dataset description is [here](data\说明.txt).
+
 ## Structure
 
 - `data/`: Contains the dataset used for training and testing.
+- `data_process/`: Contains the data preprocessing scripts.
+- `feature_extract`: Contains the feature extraction scripts
 - `models/`: Stores the trained models and model architecture files.
+- `experiments/`: Contains the methods used for solving the problem.
 - `src/`: Includes the source code for data preprocessing, model training, and evaluation.
-- `README.md`: This file, providing an overview of the project.
+ 
 
 ## Requirements
 
@@ -47,3 +37,6 @@ To run this project, you will need the following dependencies:
 3. Install the required packages. You can do this by running `pip install -r requirements.txt`.
 4. Check and uncomment the appropriate section in `main.py`.
 4. Run `python main.py`.
+
+## License
+This project is licensed under the MIT License.
