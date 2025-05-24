@@ -6,6 +6,7 @@ from torchvision import transforms
 import os
 import csv
 import matplotlib.pyplot as plt
+from plot.validation_accuracy import plot_validation_accuracy 
 
 def cnn_experiment():
     # 数据预处理：调整为150x45（验证码大小）的输入尺寸
@@ -61,14 +62,7 @@ def save_results(val_accs, final_acc):
         writer.writerow([final_acc])
 
     # 绘制验证准确率变化曲线
-    plt.figure(figsize=(10, 5))
-    plt.plot(range(1, 11), val_accs, marker='o', linestyle='-')
-    plt.title('Validation Accuracy Over Epochs')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.grid(True)
-    plt.savefig('figures/validation_accuracy_plot.png')
-    plt.close()
+    plot_validation_accuracy(data=list(zip(range(1, 11), val_accs)))
 
     # 绘制各位置准确率柱状图
     position_correct = [0]*4

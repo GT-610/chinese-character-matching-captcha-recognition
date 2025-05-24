@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # 1. 读取整个数据集
     dataset = load_dataset(data_root='data')
 
-    # 2. 显示分割后的样本吗
+    # 2. 显示分割后的样本
     # plot_split_results(dataset)
 
     # 3. 特征分析 - 可视化特征分布
@@ -34,5 +34,5 @@ if __name__ == "__main__":
     # knn_experiment()
 
     # 7. CNN分类实验
-    print("\n运行CNN分类实验...")
-    cnn_experiment()
+    # print("\n运行CNN分类实验...")
+    # cnn_experiment()
