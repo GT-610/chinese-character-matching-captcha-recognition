@@ -7,7 +7,7 @@ import os
 import csv
 import matplotlib.pyplot as plt
 def cnn_experiment():
-    # 数据预处理：调整为150x45（验证码大小）的输入尺寸
+    # 数据预处理
     transform = transforms.Compose([
         transforms.ToPILImage(),
         transforms.ToTensor(),
@@ -36,7 +36,7 @@ def cnn_experiment():
         print(f'Epoch {epoch+1}/10 | Val Acc: {val_acc:.2%}')
 
     # 最终评估
-    final_acc = evaluate_cnn(model, test_loader, device)
+    final_acc = evaluate_cnn(model, test_loader, device, verbose=True)
     print(f"\nCNN模型最终测试准确率: {final_acc:.2%}")
 
     # 保存结果到文件

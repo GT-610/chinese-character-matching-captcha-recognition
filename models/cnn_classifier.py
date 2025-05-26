@@ -62,34 +62,30 @@ class CNNCharClassifier(nn.Module):
         self.base_model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
         self.base_model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.base_model.fc = nn.Identity()
-        self.classifiers = nn.ModuleList([
-            nn.Sequential(
-                nn.Dropout(0.5),
-                nn.Linear(512, 256),
-                nn.ReLU(),
-                nn.Linear(256, num_classes)
-            ) for _ in range(num_positions)
-        ])
 
     def forward(self, x, candidates):
-        outputs = []
-        batch_size, num_splits, _, _, _= x.shape # (batch_size, num_splits, )
-        for i in range(num_splits):
-            feature = self.base_model(x[:, i, ...])
-            output = self.classifiers[i](feature)
-            outputs.append(output)
-        
         # 计算候选字符的特征相似度
+        batch_size, num_candidates, C, H, W = candidates.shape
+        candidates = candidates.view(batch_size * num_candidates, C, H, W)
         candidate_features = self.base_model(candidates)
-        similarity_scores = []
-        for i in range(num_splits):
-            similarity = torch.cosine_similarity(feature, candidate_features[:, i, ...], dim=1)
-            similarity_scores.append(similarity)
+        candidate_features = candidate_features.view(batch_size, num_candidates, -1)
+
+        # 计算输入图像的特征
+        batch_size, num_splits, C, H, W = x.shape  # 使用实际的 C, H, W
+        x = x.view(batch_size * num_splits, C, H, W)
+        features = self.base_model(x)
+        features = features.view(batch_size, num_splits, -1)
         
-        return torch.stack(outputs, dim=1), torch.stack(similarity_scores, dim=1)
+        # 计算相似度矩阵
+        similarity_scores = torch.cosine_similarity(
+            features.unsqueeze(2),  # (batch_size, num_splits, 1, feature_dim)
+            candidate_features.unsqueeze(1),  # (batch_size, 1, num_candidates, feature_dim)
+            dim=-1
+        )
+        
+        return similarity_scores
 
 def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
-    criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
     
@@ -101,20 +97,31 @@ def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
             labels = labels.to(device)  # (batch_size, 4)
             
             optimizer.zero_grad()
-            outputs, similarity_scores = model(inputs, candidates)  # (batch_size, 4, 9)
+            similarity_scores = model(inputs, candidates)  # (batch_size, 4, 9)
             
-            loss = 0
-            for i in range(4):
-                loss += criterion(outputs[:, i, :], labels[:, i]) - 0.1 * torch.mean(similarity_scores[:, i, :])
-                
+            # 创建正样本掩码
+            batch_size, num_positions, num_classes = similarity_scores.shape
+            pos_mask = torch.zeros_like(similarity_scores, dtype=torch.bool)
+            pos_mask[torch.arange(batch_size)[:, None], torch.arange(num_positions), labels] = True
+            
+            # 获取正样本分数（形状保持为 [batch_size, 4]）
+            positive_scores = similarity_scores[pos_mask].view(batch_size, num_positions)
+            
+            # 获取负样本分数（排除正样本后的所有分数）
+            negative_scores = similarity_scores[~pos_mask].view(batch_size, num_positions, num_classes-1)
+            
+            # 计算损失：最大化正样本相似度 + 最小化负样本相似度
+            pos_loss = -torch.mean(positive_scores)  # 最大化正样本相似度等价于最小化其负数
+            neg_loss = torch.mean(negative_scores)   # 最小化负样本相似度
+            loss = pos_loss + neg_loss
+            
             loss.backward()
             optimizer.step()
             
-        val_acc = evaluate_cnn(model, val_loader, device)
+        val_acc = evaluate_cnn(model, val_loader, device, verbose=False)  # 新增verbose参数
         scheduler.step(val_acc)
-        print(f'Epoch {epoch+1}/{epochs} | Val Acc: {val_acc:.2%}')
 
-def evaluate_cnn(model, loader, device='cuda'):
+def evaluate_cnn(model, loader, device='cuda', verbose=True):
     model.eval()
     correct = 0
     total = 0
@@ -126,8 +133,8 @@ def evaluate_cnn(model, loader, device='cuda'):
             candidates = candidates.to(device)
             labels = labels.to(device)  # (batch_size, 4)
             
-            outputs, similarity_scores = model(inputs, candidates)  # (batch_size, 4, 9), (batch_size, 4, 9)
-            preds = torch.argmax(outputs, dim=2)  # (batch_size, 4)
+            similarity_scores = model(inputs, candidates)  # (batch_size, 4, 9)
+            preds = torch.argmax(similarity_scores, dim=2)  # (batch_size, 4)
             
             # 计算整体正确率
             correct += (preds == labels).all(dim=1).sum().item()
@@ -137,5 +144,7 @@ def evaluate_cnn(model, loader, device='cuda'):
             for i in range(4):
                 position_correct[i] += (preds[:, i] == labels[:, i]).sum().item()
     
-    print(f"各位置准确率: {[f'{acc/total:.2%}' for acc in position_correct]}")
+    if verbose:
+        print(f"各位置准确率: {[f'{acc/total:.2%}' for acc in position_correct]}")
     return correct / total
+
