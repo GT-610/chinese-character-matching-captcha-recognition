@@ -23,7 +23,7 @@ def load_dataset(data_root='data', train=True):
             
         sample_id, label = parts
         sample_dir = os.path.join(data_root, subset, sample_id)
-        captcha_path = os.path.join(sample_dir, f'{sample_id}.jpg')
+        captcha_path = os.path.join(sample_dir)
 
         dataset.append({
             'id': sample_id,

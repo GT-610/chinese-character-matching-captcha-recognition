@@ -34,5 +34,5 @@ if __name__ == "__main__":
     # knn_experiment()
 
     # 7. CNN分类实验
-    # print("\n运行CNN分类实验...")
-    # cnn_experiment()
+    print("\n运行CNN分类实验...")
+    cnn_experiment()

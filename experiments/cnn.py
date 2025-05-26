@@ -6,13 +6,10 @@ from torchvision import transforms
 import os
 import csv
 import matplotlib.pyplot as plt
-from plot.validation_accuracy import plot_validation_accuracy 
-
 def cnn_experiment():
     # 数据预处理：调整为150x45（验证码大小）的输入尺寸
     transform = transforms.Compose([
         transforms.ToPILImage(),
-        transforms.Resize((150, 45)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5], std=[0.5])
     ])

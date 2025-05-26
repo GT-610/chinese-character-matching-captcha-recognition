@@ -5,6 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 import cv2
 import numpy as np
 import torch.nn.functional as F
+import os
 
 from data_process.split_captcha import split_captcha
 
@@ -20,7 +21,7 @@ class CharDataset(Dataset):
     def __getitem__(self, idx):
         sample = self.samples[idx]
         # 加载验证码图像
-        img = cv2.imread(sample['captcha_path'])
+        img = cv2.imread(os.path.join(sample['captcha_path'], f"{sample['id']}.jpg"))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
         
         # 分割验证码图像为四个部分
@@ -34,13 +35,25 @@ class CharDataset(Dataset):
             features.append(split_img)
         
         # 将 features 转换为张量
-        features_tensor = torch.stack(features)  # 将列表转换为张量
+        features_tensor = torch.stack(features)
+        
+        # 获取候选字符的特征向量
+        candidate_images = []
+        for i in range(9):  # 修改：加载9个候选字符图像
+            candidate_img = cv2.imread(os.path.join(sample['captcha_path'], f"{i}.jpg"), cv2.IMREAD_GRAYSCALE)  # 直接读取为灰度图像
+            if candidate_img is None:
+                raise FileNotFoundError(f"候选字符图像 {candidate_img_path} 未找到")
+            if self.transform:
+                candidate_img = self.transform(candidate_img)
+            candidate_images.append(candidate_img)
+        
+        candidate_features_tensor = torch.stack(candidate_images)  # 将候选字符特征转换为张量
         
         # 将标签转换为字符索引数组
         label_str = sample['label']
         label_indices = [int(c) for c in label_str]  # 转换为4位数字索引
         
-        return features_tensor, torch.tensor(label_indices)  # 返回张量和完整标签序列
+        return features_tensor, candidate_features_tensor, torch.tensor(label_indices)  # 返回分割特征、候选特征和完整标签序列
 
 class CNNCharClassifier(nn.Module):
     """基于ResNet18的多字符验证码识别模型"""
@@ -58,14 +71,22 @@ class CNNCharClassifier(nn.Module):
             ) for _ in range(num_positions)
         ])
 
-    def forward(self, x):
+    def forward(self, x, candidates):
         outputs = []
-        batch_size, num_splits, _, _ = x.shape
+        batch_size, num_splits, _, _, _= x.shape # (batch_size, num_splits, )
         for i in range(num_splits):
             feature = self.base_model(x[:, i, ...])
             output = self.classifiers[i](feature)
             outputs.append(output)
-        return torch.stack(outputs, dim=1)
+        
+        # 计算候选字符的特征相似度
+        candidate_features = self.base_model(candidates)
+        similarity_scores = []
+        for i in range(num_splits):
+            similarity = torch.cosine_similarity(feature, candidate_features[:, i, ...], dim=1)
+            similarity_scores.append(similarity)
+        
+        return torch.stack(outputs, dim=1), torch.stack(similarity_scores, dim=1)
 
 def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
     criterion = nn.CrossEntropyLoss()
@@ -74,16 +95,17 @@ def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
     
     model.train()
     for epoch in range(epochs):
-        for inputs, labels in train_loader:
+        for inputs, candidates, labels in train_loader:
             inputs = inputs.to(device)
+            candidates = candidates.to(device)
             labels = labels.to(device)  # (batch_size, 4)
             
             optimizer.zero_grad()
-            outputs = model(inputs)  # (batch_size, 4, 9)
+            outputs, similarity_scores = model(inputs, candidates)  # (batch_size, 4, 9)
             
             loss = 0
             for i in range(4):
-                loss += criterion(outputs[:, i, :], labels[:, i])
+                loss += criterion(outputs[:, i, :], labels[:, i]) - 0.1 * torch.mean(similarity_scores[:, i, :])
                 
             loss.backward()
             optimizer.step()
@@ -99,11 +121,12 @@ def evaluate_cnn(model, loader, device='cuda'):
     position_correct = [0]*4
     
     with torch.no_grad():
-        for inputs, labels in loader:
+        for inputs, candidates, labels in loader:
             inputs = inputs.to(device)
+            candidates = candidates.to(device)
             labels = labels.to(device)  # (batch_size, 4)
             
-            outputs = model(inputs)  # (batch_size, 4, 9)
+            outputs, similarity_scores = model(inputs, candidates)  # (batch_size, 4, 9), (batch_size, 4, 9)
             preds = torch.argmax(outputs, dim=2)  # (batch_size, 4)
             
             # 计算整体正确率
