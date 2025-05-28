@@ -5,7 +5,7 @@ from data_process.load_dataset import load_dataset
 from torchvision import transforms
 from models.siamese import SiameseDataset
 
-def train_siamese():
+def siamese_experiment():
     # 数据预处理
     transform = transforms.Compose([
         transforms.ToPILImage(),
@@ -52,30 +52,31 @@ def train_siamese():
             
         print(f'Epoch {epoch+1} Loss: {running_loss/len(train_loader):.4f}')
 
-def evaluate_siamese(model, test_loader):
+    # 在训练循环后添加评估逻辑
+    print("\n开始模型评估...")
+    base_test = load_dataset(train=False)
+    test_dataset = SiameseDataset(base_test, transform=transform)
+    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    evaluate_siamese(net, test_loader, device)  # 传入训练好的模型和测试数据
+
+    return net  # 返回训练好的模型
+
+def evaluate_siamese(model, test_loader, device):
     model.eval()
     correct = 0
     total = 0
     
     with torch.no_grad():
-        for char_imgs, pos_imgs, _ in test_loader:  # 负样本在评估时不需要
+        for char_imgs, pos_imgs, _ in test_loader:
             char_imgs = char_imgs.to(device)
             pos_imgs = pos_imgs.to(device)
             
-            # 计算特征向量
             output1, output2 = model(char_imgs, pos_imgs)
-            
-            # 计算相似度（使用欧氏距离）
             distances = F.pairwise_distance(output1, output2)
-            
-            # 判断是否匹配（距离小于阈值设为0.5）
             predictions = (distances < 0.5).long()
-            correct += (predictions == 0).sum().item()  # 正样本标签为0
+            correct += (predictions == 0).sum().item()
             total += predictions.size(0)
     
     accuracy = correct / total
-    print(f'Validation Accuracy: {accuracy:.4f}')
+    print(f'验证准确率: {accuracy:.4f}')
     return accuracy
-
-if __name__ == "__main__":
-    train_siamese()

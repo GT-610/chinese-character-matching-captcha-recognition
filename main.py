@@ -6,7 +6,7 @@ from models.knn_classifier import KNNCharClassifier, evaluate_accuracy
 
 from experiments.knn import knn_experiment
 from experiments.cnn import cnn_experiment
-from experiments.siamese import train_siamese, evaluate_siamese
+from experiments.siamese import siamese_experiment
 
 import random
 import cv2
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     dataset = load_dataset(data_root='data')
 
     # 2. 显示分割后的样本
-    plot_split_results(dataset)
+    # plot_split_results(dataset)
 
     # 3. 特征分析 - 可视化特征分布
     # print("Analyzing feature distribution...")
@@ -39,7 +39,5 @@ if __name__ == "__main__":
     # cnn_experiment()
 
     # 8. Siamese网络实验
-    # print("\n运行Siamese网络实验...")
-    # train_siamese()
-    # evaluate_siamese()
-    
+    print("\n运行Siamese网络实验...")
+    siamese_experiment()
