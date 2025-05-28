@@ -31,3 +31,6 @@ def plot_validation_accuracy(data=None, csv_path=None, output_path='figures/vali
     plt.close()
 
     print(f"验证准确率曲线已保存到 {output_path}")
+
+if __name__ == '__main__':
+    plot_validation_accuracy(csv_path='results/validation_accuracy.csv')

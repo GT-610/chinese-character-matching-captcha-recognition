@@ -1,7 +1,8 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from data_process.image_preprocessing import preprocess_image  # 导入预处理函数
+from data_process.image_preprocessing import preprocess_image
+import os
 
 def split_captcha(image, num_splits=4):
     """
@@ -10,7 +11,7 @@ def split_captcha(image, num_splits=4):
     :param num_splits: 分割份数
     :return: 分割后的图片列表
     """
-    height, width = image.shape  # 获取图像高度和宽度
+    height, width= image.shape  # 获取图像高度和宽度
     
     split_width = width // num_splits
     splits = []
@@ -32,11 +33,10 @@ def plot_split_results(dataset, num_samples=5):
     plt.figure(figsize=(12, 3 * num_samples))
 
     for i, sample in enumerate(selected_samples):
-        captcha_img = cv2.imread(sample['captcha_path'], 0)  # 读取为灰度图
+        captcha_img = cv2.imread(os.path.join(sample['captcha_path'], f"{sample['id']}.jpg"), 0)
         
-        # 调用预处理函数
         processed_img = preprocess_image(captcha_img)
-        
+
         # 分割预处理后的图片
         splits = split_captcha(processed_img)
 
