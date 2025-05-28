@@ -58,9 +58,6 @@ def save_results(val_accs, final_acc):
         writer.writerow(['Final Accuracy'])
         writer.writerow([final_acc])
 
-    # 绘制验证准确率变化曲线
-    plot_validation_accuracy(data=list(zip(range(1, 11), val_accs)))
-
     # 绘制各位置准确率柱状图
     position_correct = [0]*4
     for i in range(4):

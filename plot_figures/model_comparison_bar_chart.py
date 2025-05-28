@@ -3,8 +3,8 @@ import numpy as np
 
 # 数据准备
 models = ['KNN\n(HOG)', 'CNN', 'ResNet-50\nFine-tuned', 'Siamese\nNetwork', 'Siamese+Transformer']
-single_char_acc = [12.3, 75.6, 81.8, 88.0, 90.0]
-sequence_acc = [0.2, 38.2, 45.6, 97.40, 98.20]
+single_char_acc = [12.3, 63.20, 81.8, 88.0, 90.0]
+sequence_acc = [0.2, 13.00, 45.6, 97.40, 98.20]
 
 x = np.arange(len(models))  # x轴位置
 width = 0.35  # 柱子宽度
