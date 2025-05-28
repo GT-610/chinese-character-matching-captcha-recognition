@@ -6,6 +6,7 @@ from models.knn_classifier import KNNCharClassifier, evaluate_accuracy
 
 from experiments.knn import knn_experiment
 from experiments.cnn import cnn_experiment
+from experiments.siamese import train_siamese, evaluate_siamese
 
 import random
 import cv2
@@ -34,5 +35,11 @@ if __name__ == "__main__":
     # knn_experiment()
 
     # 7. CNN分类实验
-    print("\n运行CNN分类实验...")
-    cnn_experiment()
+    # print("\n运行CNN分类实验...")
+    # cnn_experiment()
+
+    # 8. Siamese网络实验
+    print("\n运行Siamese网络实验...")
+    train_siamese()
+    evaluate_siamese()
+    

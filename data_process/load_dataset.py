@@ -32,3 +32,7 @@ def load_dataset(data_root='data', train=True):
         })
 
     return dataset
+
+# 注意：需要同步修改其他文件中的导入路径
+# 原 from data_process.load_dataset import SiameseDataset 
+# 需改为 from models.siamese import SiameseDataset
