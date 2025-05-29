@@ -40,4 +40,4 @@ if __name__ == "__main__":
 
     # 8. Siamese网络实验
     print("\n运行Siamese网络实验...")
-    siamese_experiment()
+    siamese_experiment(force_retrain=False)  # 设置为True可强制重新训练
