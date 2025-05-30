@@ -1,0 +1,51 @@
+graph TD
+    A[开始实验] --> B{模型是否存在?}
+    B -- 是 --> C[加载预训练模型]
+    B -- 否 --> D[初始化SiameseNetwork]
+    D --> E[准备数据集]
+    E --> F[创建DataLoader]
+    F --> G[定义优化器Adam和损失函数ContrastiveLoss]
+    
+    G --> H[训练循环]
+    H --> I[正样本对计算]
+    I --> J[负样本对计算]
+    J --> K[合并损失]
+    K --> L[反向传播]
+    L --> M[参数更新]
+    M --> H
+    
+    H --> N{完成20 epoch?}
+    N -- 否 --> H
+    N -- 是 --> O[保存模型]
+    
+    O --> P[评估准备]
+    C --> P
+    P --> Q[加载测试数据集]
+    Q --> R[重组验证码数据]
+    R --> S[计算特征向量距离]
+    S --> T[统计准确率]
+    T --> U[输出单字/完整验证码准确率]
+    U --> V[结束]
+
+    style A fill:#4CAF50,stroke:#388E3C,color:black
+    style B fill:#FFC107,stroke:#FFA000,color:black
+    style C fill:#2196F3,stroke:#1976D2,color:white
+    style D fill:#2196F3,stroke:#1976D2,color:white
+    style E fill:#9C27B0,stroke:#7B1FA2,color:white
+    style F fill:#9C27B0,stroke:#7B1FA2,color:white
+    style G fill:#9C27B0,stroke:#7B1FA2,color:white
+    style H fill:#009688,stroke:#00796B,color:white
+    style M fill:#009688,stroke:#00796B,color:white
+    style N fill:#009688,stroke:#00796B,color:white
+    style I fill:#FF5722,stroke:#E64A19,color:white
+    style J fill:#FF5722,stroke:#E64A19,color:white
+    style K fill:#FF5722,stroke:#E64A19,color:white
+    style L fill:#FF5722,stroke:#E64A19,color:white
+    style O fill:#3F51B5,stroke:#303F9F,color:white
+    style P fill:#3F51B5,stroke:#303F9F,color:white
+    style Q fill:#3F51B5,stroke:#303F9F,color:white
+    style R fill:#3F51B5,stroke:#303F9F,color:white
+    style S fill:#3F51B5,stroke:#303F9F,color:white
+    style T fill:#3F51B5,stroke:#303F9F,color:white
+    style U fill:#3F51B5,stroke:#303F9F,color:white
+    style V fill:#F44336,stroke:#D32F2F,color:white

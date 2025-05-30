@@ -94,16 +94,15 @@ class SiameseNetwork(nn.Module):
         output2 = self.forward_once(input2)
         return output1, output2
 
-class ContrastiveLoss(nn.Module):
-    """对比损失函数"""
-    def __init__(self, margin=2.0):
-        super(ContrastiveLoss, self).__init__()
+# 新增三元组损失函数
+class TripletLoss(nn.Module):
+    """三元组损失函数（Triplet Loss）"""
+    def __init__(self, margin=1.0):
+        super(TripletLoss, self).__init__()
         self.margin = margin
 
-    def forward(self, output1, output2, label):
-        euclidean_distance = F.pairwise_distance(output1, output2)
-        loss_contrastive = torch.mean((1-label) * torch.pow(euclidean_distance, 2) +
-                                      (label) * torch.pow(torch.clamp(self.margin - euclidean_distance, min=0.0), 2))
-        return loss_contrastive
-
-
+    def forward(self, anchor, positive, negative):
+        pos_distance = F.pairwise_distance(anchor, positive)
+        neg_distance = F.pairwise_distance(anchor, negative)
+        losses = torch.relu(pos_distance - neg_distance + self.margin)
+        return torch.mean(losses)

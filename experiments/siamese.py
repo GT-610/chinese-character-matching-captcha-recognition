@@ -11,20 +11,26 @@ def siamese_experiment(force_retrain=False):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model_path = 'models/saved/siamese_model.pth'
     
+    # 数据预处理（提升到if-else之前）
+    transform = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize((45, 45)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5], std=[0.5])
+    ])
+    
     # 检查是否存在预训练模型
     if not force_retrain and os.path.exists(model_path):
         print("加载预训练模型...")
-        net = torch.load(model_path).to(device)
+        # 添加安全加载上下文管理器
+        with torch.serialization.safe_globals([SiameseNetwork]):
+            net = torch.load(
+                model_path,
+                weights_only=False,  # 启用安全加载模式
+                map_location=device
+            ).to(device)
     else:
         print("开始训练新模型...")
-        # 数据预处理
-        transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((45, 45)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.5], std=[0.5])
-        ])
-        
         # 加载并包装数据集
         base_train = load_dataset(train=True)
         train_dataset = SiameseDataset(base_train, transform=transform)
@@ -32,7 +38,7 @@ def siamese_experiment(force_retrain=False):
         
         # 初始化模型
         net = SiameseNetwork().to(device)
-        criterion = ContrastiveLoss()
+        criterion = TripletLoss(margin=1.0)  # 原为ContrastiveLoss()
         optimizer = torch.optim.Adam(net.parameters(), lr=0.0005)
         
         # 训练循环
@@ -44,17 +50,15 @@ def siamese_experiment(force_retrain=False):
                 pos_imgs = pos_imgs.to(device)
                 neg_imgs = neg_imgs.to(device)
 
-                # 正样本对训练
+                # 修改前向传播逻辑
                 optimizer.zero_grad()
-                output1, output2 = net(char_imgs, pos_imgs)
-                loss_pos = criterion(output1, output2, torch.zeros(char_imgs.size(0)).to(device))
                 
-                # 负样本对训练 
-                output1, output2 = net(char_imgs, neg_imgs)
-                loss_neg = criterion(output1, output2, torch.ones(char_imgs.size(0)).to(device))
+                # 新增三元组损失计算
+                anchor = net.forward_once(char_imgs)
+                positive = net.forward_once(pos_imgs)
+                negative = net.forward_once(neg_imgs)
+                total_loss = criterion(anchor, positive, negative)
                 
-                # 合并损失
-                total_loss = loss_pos + loss_neg
                 total_loss.backward()
                 optimizer.step()
                 
@@ -67,7 +71,7 @@ def siamese_experiment(force_retrain=False):
         torch.save(net, model_path)
         print(f"模型已保存至 {model_path}")
 
-    # 评估模型（无论新训练还是加载已有模型）
+    # 评估模型（transform现在已正确定义）
     print("\n开始模型评估...")
     base_test = load_dataset(train=False)
     test_dataset = SiameseDataset(base_test, transform=transform)
@@ -78,21 +82,33 @@ def siamese_experiment(force_retrain=False):
 
 def evaluate_siamese(model, test_loader, device):
     model.eval()
-    correct = 0
-    total = 0
+    char_correct = 0
+    char_total = 0
+    captcha_correct = 0
+    captcha_total = 0
     
     with torch.no_grad():
-        for char_imgs, pos_imgs, _ in test_loader:
-            char_imgs = char_imgs.to(device)
-            pos_imgs = pos_imgs.to(device)
+        # 修改为按验证码维度处理（每个验证码包含4个字符）
+        for batch in test_loader:
+            # 重组数据维度：batch_size=4表示一个完整验证码
+            char_imgs = batch[0].view(4, -1, 1, 45, 45).to(device)  # [4,1,45,45] -> [1,4,1,45,45]
+            pos_imgs = batch[1].view(4, -1, 1, 45, 45).to(device)
             
-            output1, output2 = model(char_imgs, pos_imgs)
+            # 同时处理验证码的4个字符
+            output1, output2 = model(char_imgs.squeeze(1), pos_imgs.squeeze(1))
             distances = F.pairwise_distance(output1, output2)
             predictions = (distances < 0.5).long()
-            correct += (predictions == 0).sum().item()
-            total += predictions.size(0)
+            
+            # 单字准确率计算
+            char_correct += (predictions == 0).sum().item()
+            char_total += predictions.size(0)
+            
+            # 完整验证码准确率计算（4个字符需全部正确）
+            captcha_pred = (predictions.view(-1, 4).sum(dim=1) == 4)  # 每个验证码的4个预测
+            captcha_correct += captcha_pred.sum().item()
+            captcha_total += captcha_pred.size(0)
     
-    accuracy = correct / total
-    print(f'验证准确率: {accuracy:.4f}')
-    return accuracy
+    print(f'单字验证准确率: {char_correct/char_total:.4f}')
+    print(f'完整验证码准确率: {captcha_correct/captcha_total:.4f}')
+    return (char_correct/char_total, captcha_correct/captcha_total)
 
