@@ -4,6 +4,7 @@ from torchvision import transforms
 from models.resnet_finetune import ResNetCharClassifier
 from data_process.load_dataset import load_dataset
 from models.cnn_classifier import CharDataset  # 复用现有数据集
+import torch.nn as nn
 
 def resnet_finetune_experiment():
     # 数据预处理
@@ -74,3 +75,29 @@ def evaluate_resnet(model, loader, device):
             total += labels.size(0)
     
     return correct / total
+
+# 修改数据集包装器（原为复用Siamese格式）
+class CharDataset(Dataset):
+    def __init__(self, base_dataset, transform=None):
+        self.base_dataset = base_dataset
+        self.transform = transform
+        
+    def __len__(self):
+        return len(self.base_dataset) * 4  # 每个验证码4个字符
+
+    def __getitem__(self, idx):
+        sample_idx = idx // 4
+        char_pos = idx % 4
+        
+        sample = self.base_dataset[sample_idx]
+        img = cv2.imread(sample['captcha_path'] + f"/{sample['id']}.jpg", 0)
+        split_images = split_captcha(img, num_splits=4)
+        
+        # 获取当前字符图像和标签
+        char_img = split_images[char_pos]
+        label = int(sample['label'][char_pos])
+        
+        if self.transform:
+            char_img = self.transform(char_img)
+            
+        return char_img, label  # 修改返回值为(图像,标签)二元组

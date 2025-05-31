@@ -71,7 +71,7 @@ def siamese_experiment(force_retrain=False):
         torch.save(net, model_path)
         print(f"模型已保存至 {model_path}")
 
-    # 评估模型（transform现在已正确定义）
+    # 评估模型
     print("\n开始模型评估...")
     base_test = load_dataset(train=False)
     test_dataset = SiameseDataset(base_test, transform=transform)
