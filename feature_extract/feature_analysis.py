@@ -17,6 +17,9 @@ def extract_hog_features(image, visualize=False):
     # 预处理
     processed_img = preprocess_image(image)
     
+    # 新增缩放逻辑解决尺寸不足问题
+    processed_img = cv2.resize(processed_img, (64, 64), interpolation=cv2.INTER_AREA)
+    
     if visualize:
         features, hog_img = hog(processed_img, 
                               orientations=16,
