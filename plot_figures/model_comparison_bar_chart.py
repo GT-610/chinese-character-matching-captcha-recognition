@@ -3,8 +3,8 @@ import numpy as np
 
 # 数据准备
 models = ['KNN\n(HOG)', 'CNN', 'ResNet-50\nFine-tuned', 'Siamese\nNetwork', 'Siamese+Transformer']
-single_char_acc = [12.3, 63.20, 81.8, 88.0, 90.0]
-sequence_acc = [0.2, 13.00, 45.6, 97.40, 98.20]
+single_char_acc = [12.3, 63.20, 81.8, 99.9, 99.9]
+sequence_acc = [0.2, 13.00, 45.6, 97.4, 99.6]
 
 x = np.arange(len(models))  # x轴位置
 width = 0.35  # 柱子宽度
@@ -34,7 +34,8 @@ def autolabel(rects):
 autolabel(rects1)
 autolabel(rects2)
 
-plt.ylim(0, 100)
+# 调整Y轴范围上限从100%改为105%，避免顶部标签重叠
+plt.ylim(0, 105)  # 原为 plt.ylim(0, 100)
 plt.tight_layout()
 plt.grid(True, axis='y', linestyle='--', alpha=0.5)
 plt.savefig("figures/model_comparison_bar_chart.png", dpi=300, bbox_inches='tight')

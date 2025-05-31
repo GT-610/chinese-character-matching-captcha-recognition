@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from models.siamese import SiameseNetwork, ContrastiveLoss
+from models.siamese import SiameseNetwork, TripletLoss
 from data_process.load_dataset import load_dataset
 from torchvision import transforms
 from models.siamese import SiameseDataset
@@ -88,26 +88,30 @@ def evaluate_siamese(model, test_loader, device):
     captcha_total = 0
     
     with torch.no_grad():
-        # 修改为按验证码维度处理（每个验证码包含4个字符）
         for batch in test_loader:
-            # 重组数据维度：batch_size=4表示一个完整验证码
-            char_imgs = batch[0].view(4, -1, 1, 45, 45).to(device)  # [4,1,45,45] -> [1,4,1,45,45]
-            pos_imgs = batch[1].view(4, -1, 1, 45, 45).to(device)
+            # 修改维度重组逻辑：将嵌套维度展开为批量维度
+            char_imgs = batch[0].view(-1, 1, 45, 45).to(device)  # [batch*4, 1, 45, 45]
+            pos_imgs = batch[1].view(-1, 1, 45, 45).to(device)   # [batch*4, 1, 45, 45]
             
-            # 同时处理验证码的4个字符
-            output1, output2 = model(char_imgs.squeeze(1), pos_imgs.squeeze(1))
-            distances = F.pairwise_distance(output1, output2)
+            # 前向传播时保持正确的维度结构
+            anchor = model.forward_once(char_imgs)
+            positive = model.forward_once(pos_imgs)
+            
+            # 修改距离计算后的维度恢复逻辑
+            distances = F.pairwise_distance(anchor, positive)
             predictions = (distances < 0.5).long()
             
-            # 单字准确率计算
-            char_correct += (predictions == 0).sum().item()
-            char_total += predictions.size(0)
+            # 恢复原始验证码结构 [batch_size, 4]
+            predictions = predictions.view(-1, 4)  # 将预测结果重组为每个验证码4个字符
             
-            # 完整验证码准确率计算（4个字符需全部正确）
-            captcha_pred = (predictions.view(-1, 4).sum(dim=1) == 4)  # 每个验证码的4个预测
+            # 单字准确率计算（此处逻辑正确）
+            char_correct += (predictions == 0).sum().item()
+            char_total += predictions.numel()
+            
+            captcha_pred = (predictions.sum(dim=1) == 0)
             captcha_correct += captcha_pred.sum().item()
             captcha_total += captcha_pred.size(0)
-    
+
     print(f'单字验证准确率: {char_correct/char_total:.4f}')
     print(f'完整验证码准确率: {captcha_correct/captcha_total:.4f}')
     return (char_correct/char_total, captcha_correct/captcha_total)

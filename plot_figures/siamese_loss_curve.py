@@ -27,9 +27,9 @@ for epoch in [1, 5, 10, 15, 20]:
 # 图表装饰
 plt.title('Siamese Network Training Loss (20 Epochs)', fontsize=14, pad=20)
 plt.xlabel('Training Epoch', fontsize=12)
-plt.ylabel('Contrastive Loss', fontsize=12)
+plt.ylabel('Triplet Loss', fontsize=12)  # 修改损失函数名称
 plt.xticks(range(1,21))
-plt.ylim(0.4, 1.8)
+plt.ylim(0, 0.6)  # 调整y轴范围至实际数据区间
 plt.legend()
 
 # 保存输出
