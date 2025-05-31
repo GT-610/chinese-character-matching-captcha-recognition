@@ -1,11 +1,12 @@
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset  # 添加Dataset基类导入
 from torchvision import transforms
 from models.resnet_finetune import ResNetCharClassifier
 from data_process.load_dataset import load_dataset
+from data_process.split_captcha import split_captcha
 from models.cnn_classifier import CharDataset  # 复用现有数据集
 import torch.nn as nn
-
+import cv2
 def resnet_finetune_experiment():
     # 数据预处理
     transform = transforms.Compose([
@@ -76,28 +77,35 @@ def evaluate_resnet(model, loader, device):
     
     return correct / total
 
-# 修改数据集包装器（原为复用Siamese格式）
+# 修改数据集包装器以适配4通道输入
 class CharDataset(Dataset):
     def __init__(self, base_dataset, transform=None):
         self.base_dataset = base_dataset
         self.transform = transform
         
     def __len__(self):
-        return len(self.base_dataset) * 4  # 每个验证码4个字符
+        return len(self.base_dataset)  # 改为返回验证码数量（原为*4）
 
     def __getitem__(self, idx):
-        sample_idx = idx // 4
-        char_pos = idx % 4
-        
-        sample = self.base_dataset[sample_idx]
+        sample = self.base_dataset[idx]
         img = cv2.imread(sample['captcha_path'] + f"/{sample['id']}.jpg", 0)
         split_images = split_captcha(img, num_splits=4)
         
-        # 获取当前字符图像和标签
-        char_img = split_images[char_pos]
-        label = int(sample['label'][char_pos])
-        
-        if self.transform:
-            char_img = self.transform(char_img)
+        # 处理四个字符图像
+        char_imgs = []
+        labels = []
+        for i in range(4):
+            char_img = split_images[i]
+            if self.transform:
+                char_img = self.transform(char_img)
+            char_imgs.append(char_img)
+            labels.append(int(sample['label'][i]))
             
-        return char_img, label  # 修改返回值为(图像,标签)二元组
+        # 修改图像堆叠方式：将四张单通道图片合并为四通道输入
+        char_imgs = torch.cat(char_imgs, dim=0)  # 从stack改为cat，形状变为 [4, 224, 224]
+        
+        # 添加通道维度并转置维度顺序为 [C, H, W]
+        char_imgs = char_imgs.unsqueeze(1).permute(1, 0, 2, 3)  # 最终形状 [1, 4, 224, 224]
+        
+        # 修改返回标签为张量格式
+        return char_imgs, torch.LongTensor(labels)  # 将列表转换为LongTensor
