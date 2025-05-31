@@ -84,7 +84,7 @@ class CharDataset(Dataset):
         self.transform = transform
         
     def __len__(self):
-        return len(self.base_dataset)  # 改为返回验证码数量（原为*4）
+        return len(self.base_dataset)
 
     def __getitem__(self, idx):
         sample = self.base_dataset[idx]
@@ -101,11 +101,10 @@ class CharDataset(Dataset):
             char_imgs.append(char_img)
             labels.append(int(sample['label'][i]))
             
-        # 修改图像堆叠方式：将四张单通道图片合并为四通道输入
+        # 将四张单通道图片合并为四通道输入
         char_imgs = torch.cat(char_imgs, dim=0)  # 从stack改为cat，形状变为 [4, 224, 224]
         
         # 添加通道维度并转置维度顺序为 [C, H, W]
         char_imgs = char_imgs.unsqueeze(1).permute(1, 0, 2, 3)  # 最终形状 [1, 4, 224, 224]
         
-        # 修改返回标签为张量格式
-        return char_imgs, torch.LongTensor(labels)  # 将列表转换为LongTensor
+        return char_imgs, torch.LongTensor(labels)

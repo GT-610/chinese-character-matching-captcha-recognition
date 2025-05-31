@@ -40,9 +40,9 @@ if __name__ == "__main__":
     # cnn_experiment()
 
     # 8. Siamese网络实验
-    # print("\n运行Siamese网络实验...")
-    # siamese_experiment(force_retrain=False)  # 设置为True可强制重新训练
+    print("\n运行Siamese网络实验...")
+    siamese_experiment(force_retrain=False)  # 设置为True可强制重新训练
 
     # 9. ResNet微调实验（新增代码块）
-    print("\n运行ResNet微调实验...")
-    resnet_finetune_experiment()
+    # print("\n运行ResNet微调实验...")
+    # resnet_finetune_experiment()

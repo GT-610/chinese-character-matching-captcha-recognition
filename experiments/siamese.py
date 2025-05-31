@@ -6,6 +6,7 @@ from torchvision import transforms
 from models.siamese import SiameseDataset
 import torch.nn.functional as F
 import os
+import cv2
 
 def siamese_experiment(force_retrain=False):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -78,6 +79,10 @@ def siamese_experiment(force_retrain=False):
     test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
     evaluate_siamese(net, test_loader, device)
     
+    # 在评估完成后添加
+    print("\n生成预测可视化...")
+    visualize_predictions(net, test_loader, device, base_test)
+    
     return net
 
 def evaluate_siamese(model, test_loader, device):
@@ -116,3 +121,56 @@ def evaluate_siamese(model, test_loader, device):
     print(f'完整验证码准确率: {captcha_correct/captcha_total:.4f}')
     return (char_correct/char_total, captcha_correct/captcha_total)
 
+# 新增可视化函数
+def visualize_predictions(model, loader, device, base_dataset, num_samples=5):
+    import matplotlib.pyplot as plt
+    import numpy as np
+    
+    model.eval()
+    indices = np.random.choice(len(base_dataset), num_samples, replace=False)
+    
+    plt.figure(figsize=(24, 4*num_samples))  # 增加画布宽度以适应5列布局
+    for plot_idx, sample_idx in enumerate(indices):
+        sample = base_dataset[sample_idx]
+        sample_id = sample['id']
+        true_label = sample['label']
+        
+        # 加载原始验证码图像
+        original_img = cv2.imread(os.path.join(sample['captcha_path'], f"{sample_id}.jpg"))
+        original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
+        
+        # 绘制原始验证码图像（新增第一列）
+        ax = plt.subplot(num_samples, 5, plot_idx*5 + 1)
+        plt.imshow(original_img)
+        plt.title(f"Sample ID: {sample_id}\nTrue Label: {true_label}", fontsize=10)
+        plt.axis('off')
+
+        # 绘制四个字符预测结果（修改后四列）
+        with torch.no_grad():
+            inputs = [loader.dataset[sample_idx*4 + i] for i in range(4)]
+            char_imgs = torch.stack([x[0] for x in inputs]).to(device)
+            pos_imgs = torch.stack([x[1] for x in inputs]).to(device)
+            
+            anchor = model.forward_once(char_imgs)
+            positive = model.forward_once(pos_imgs)
+            distances = F.pairwise_distance(anchor, positive)
+            predictions = (distances < 0.5).cpu().numpy()
+
+        for char_idx in range(4):
+            ax = plt.subplot(num_samples, 5, plot_idx*5 + char_idx + 2)
+            
+            # 获取候选字符图像（修改标题显示逻辑）
+            candidate_img = inputs[char_idx][1].cpu().numpy().squeeze()
+            candidate_img = (candidate_img * 0.5 + 0.5) * 255
+            
+            plt.imshow(candidate_img)
+            
+            color = 'red' if predictions[char_idx] else 'green'
+            plt.title(f"Char {char_idx+1}\ndist={distances[char_idx]:.2f}",
+                     color=color, fontsize=9)
+            plt.axis('off')
+
+    plt.tight_layout()
+    plt.savefig(f'figures/siamese_predictions.png')
+    plt.close()
+    print(f"可视化结果已保存至 figures/siamese_predictions.png")
