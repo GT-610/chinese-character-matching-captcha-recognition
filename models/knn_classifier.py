@@ -57,13 +57,12 @@ def evaluate_accuracy(classifier, test_features, test_labels):
     from tqdm import tqdm
     
     correct = 0
-    captcha_correct = 0  # 新增：完全正确的验证码计数
+    captcha_correct = 0 
     print("评估进度：")
     for features, true_label in tqdm(zip(test_features, test_labels), total=len(test_labels)):
         pred = classifier._predict_single(features)
         if pred == true_label:
             correct += 1
-    # 新增验证码级别准确率计算
     return {
         'char_accuracy': correct / len(test_labels),
         'captcha_accuracy': captcha_correct / len(test_labels)

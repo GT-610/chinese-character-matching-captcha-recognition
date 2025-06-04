@@ -18,7 +18,7 @@ class SiameseTransformerNetwork(SiameseNetwork):
             num_layers=num_layers
         )
         
-        # 调整全连接层输入维度
+        # 全连接层输入
         self.fc = nn.Sequential(
             nn.Linear(256*5*5, 1024),
             nn.ReLU(inplace=True),

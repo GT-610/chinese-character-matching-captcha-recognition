@@ -1,10 +1,10 @@
 import torch
-from torch.utils.data import DataLoader, Dataset  # 添加Dataset基类导入
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from models.resnet_finetune import ResNetCharClassifier
 from data_process.load_dataset import load_dataset
 from data_process.split_captcha import split_captcha
-from models.cnn_classifier import CharDataset  # 复用现有数据集
+from models.cnn_classifier import CharDataset
 import torch.nn as nn
 import cv2
 def resnet_finetune_experiment():
@@ -77,7 +77,7 @@ def evaluate_resnet(model, loader, device):
     
     return correct / total
 
-# 修改数据集包装器以适配4通道输入
+# 数据集
 class CharDataset(Dataset):
     def __init__(self, base_dataset, transform=None):
         self.base_dataset = base_dataset
@@ -102,9 +102,9 @@ class CharDataset(Dataset):
             labels.append(int(sample['label'][i]))
             
         # 将四张单通道图片合并为四通道输入
-        char_imgs = torch.cat(char_imgs, dim=0)  # 从stack改为cat，形状变为 [4, 224, 224]
+        char_imgs = torch.cat(char_imgs, dim=0)  # [4, 224, 224]
         
         # 添加通道维度并转置维度顺序为 [C, H, W]
-        char_imgs = char_imgs.unsqueeze(1).permute(1, 0, 2, 3)  # 最终形状 [1, 4, 224, 224]
+        char_imgs = char_imgs.unsqueeze(1).permute(1, 0, 2, 3)  # [1, 4, 224, 224]
         
         return char_imgs, torch.LongTensor(labels)

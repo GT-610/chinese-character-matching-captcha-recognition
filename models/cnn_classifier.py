@@ -39,7 +39,7 @@ class CharDataset(Dataset):
         
         # 获取候选字符的特征向量
         candidate_images = []
-        for i in range(9):  # 修改：加载9个候选字符图像
+        for i in range(9):  # 加载9个候选字符图像
             candidate_img = cv2.imread(os.path.join(sample['captcha_path'], f"{i}.jpg"), cv2.IMREAD_GRAYSCALE)  # 直接读取为灰度图像
             if candidate_img is None:
                 raise FileNotFoundError(f"候选字符图像 {candidate_img_path} 未找到")
@@ -118,7 +118,7 @@ def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
             loss.backward()
             optimizer.step()
             
-        val_acc = evaluate_cnn(model, val_loader, device, verbose=False)  # 新增verbose参数
+        val_acc = evaluate_cnn(model, val_loader, device, verbose=False)
         scheduler.step(val_acc)
 
 def evaluate_cnn(model, loader, device='cuda', verbose=True):
