@@ -2,7 +2,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
-# 模拟混淆矩阵数据（假设类别为 0~8）
 conf_matrix = np.random.randint(0, 10, size=(9, 9))
 
 # 绘图

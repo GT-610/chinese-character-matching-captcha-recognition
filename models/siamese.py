@@ -57,7 +57,7 @@ class SiameseDataset(Dataset):
                 return candidates[idx]
 
 class SiameseNetwork(nn.Module):
-    """孪生网络主干结构"""
+    """孪生网络"""
     def __init__(self):
         super(SiameseNetwork, self).__init__()
         
@@ -71,8 +71,7 @@ class SiameseNetwork(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2, stride=2),
             
-            # 修改第三层卷积核尺寸为4x4，使最终特征图尺寸为5x5
-            nn.Conv2d(128, 256, kernel_size=4),  # 原为kernel_size=3
+            nn.Conv2d(128, 256, kernel_size=4),
             nn.ReLU(inplace=True)
         )
         
@@ -94,7 +93,6 @@ class SiameseNetwork(nn.Module):
         output2 = self.forward_once(input2)
         return output1, output2
 
-# 新增三元组损失函数
 class TripletLoss(nn.Module):
     """三元组损失函数（Triplet Loss）"""
     def __init__(self, margin=1.0):
