@@ -51,10 +51,10 @@ def siamese_experiment(force_retrain=False):
                 pos_imgs = pos_imgs.to(device)
                 neg_imgs = neg_imgs.to(device)
 
-                # 修改前向传播逻辑
+                # 前向传播
                 optimizer.zero_grad()
                 
-                # 新增三元组损失计算
+                # 三元组损失
                 anchor = net.forward_once(char_imgs)
                 positive = net.forward_once(pos_imgs)
                 negative = net.forward_once(neg_imgs)

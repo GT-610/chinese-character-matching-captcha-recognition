@@ -34,7 +34,7 @@ def autolabel(rects):
 autolabel(rects1)
 autolabel(rects2)
 
-# 调整Y轴范围上限从100%改为105%，避免顶部标签重叠
+# 105%避免顶部标签重叠
 plt.ylim(0, 105)
 plt.tight_layout()
 plt.grid(True, axis='y', linestyle='--', alpha=0.5)

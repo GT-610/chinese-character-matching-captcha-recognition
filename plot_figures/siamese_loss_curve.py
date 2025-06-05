@@ -29,7 +29,7 @@ plt.title('Siamese Network Training Loss (20 Epochs)', fontsize=14, pad=20)
 plt.xlabel('Training Epoch', fontsize=12)
 plt.ylabel('Triplet Loss', fontsize=12)
 plt.xticks(range(1,21))
-plt.ylim(0, 0.6)  # 调整y轴范围至实际数据区间
+plt.ylim(0, 0.6)
 plt.legend()
 
 # 保存输出

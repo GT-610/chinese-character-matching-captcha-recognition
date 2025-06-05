@@ -18,7 +18,7 @@ class KNNCharClassifier:
     
     def _predict_single(self, x):
         """预测单个样本"""
-        # 改进距离计算（曼哈顿距离）
+        # 曼哈顿距离
         distances = np.sum(np.abs(self.X_train - x), axis=1)
         # 获取最近的k个样本索引
         k_indices = np.argsort(distances)[:self.k]
