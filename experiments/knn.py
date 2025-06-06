@@ -3,6 +3,7 @@ import cv2
 from models.knn_classifier import KNNCharClassifier, evaluate_accuracy
 from feature_extract.feature_analysis import analyze_single_char_features, extract_hog_features
 from data_process.load_dataset import load_dataset
+import os
 
 def knn_experiment():
     # 获取所有单字特征和标签
@@ -30,7 +31,9 @@ def knn_experiment():
         print(f"\n正在处理测试样本 {i+1}/3...")
         # 提取验证码中的4个字符特征
         char_features = []
-        for j, path in enumerate(sample['single_char_paths'][:4]):
+        char_indices = list(map(int, sample['label']))
+        for idx in char_indices:
+            path = os.path.join(sample['captcha_path'], f"{idx}.jpg")
             img = cv2.imread(path, 0)
             char_features.append(extract_hog_features(img))
         pred = knn.predict_captcha(char_features)

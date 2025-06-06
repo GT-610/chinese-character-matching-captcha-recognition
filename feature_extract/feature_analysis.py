@@ -71,10 +71,8 @@ def analyze_single_char_features(dataset):
         
         # 遍历验证码中的4个字符索引
         for idx in char_indices:
-            if idx >= len(sample['single_char_paths']):
-                continue  # 防止索引越界
                 
-            path = sample['single_char_paths'][idx]
+            path = os.path.join(sample['captcha_path'], f"{idx}.jpg")
             img = cv2.imread(path, 0)  # 读取为灰度图
             if img is None:
                 continue
