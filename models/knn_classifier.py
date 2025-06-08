@@ -18,11 +18,9 @@ class KNNCharClassifier:
         self.candidate_features = [self.X_train[self.y_train == i][0] for i in range(9)]
 
     def _predict_single(self, x, position=None):
-        """新增position参数表示字符位置"""
         distances = np.sum(np.abs(self.X_train - x), axis=1)
         k_indices = np.argsort(distances)[:self.k]
         
-        # 新增位置过滤逻辑
         if position is not None:
             position_filter = (self.y_train % 4 == position)
             k_indices = [idx for idx in k_indices if position_filter[idx]]

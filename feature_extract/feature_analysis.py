@@ -86,7 +86,4 @@ def analyze_single_char_features(dataset):
     all_features = np.array(all_features)
     all_labels = np.array(all_labels)
     
-    # 可视化特征分布
-    # visualize_feature_distribution(all_features, all_labels, "Single Character Feature Distribution")
-    
     return all_features, all_labels

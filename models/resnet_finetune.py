@@ -14,7 +14,6 @@ class ResNetCharClassifier(nn.Module):
                                         padding=original_conv.padding,
                                         bias=original_conv.bias)
         
-        # 替换最后的全连接层
         in_features = self.base_model.fc.in_features
         self.base_model.fc = nn.Linear(in_features, num_classes * num_positions)
         
