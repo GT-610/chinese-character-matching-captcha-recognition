@@ -10,9 +10,9 @@ import os
 from data_process.split_captcha import split_captcha
 
 class CharDataset(Dataset):
-    """验证码数据集（分割后的单字图像+多字符标签）"""
+    """Dataset for CAPTCHA images containing split characters and multi-character labels"""
     def __init__(self, dataset, transform=None):
-        self.samples = dataset  # 直接使用原始数据集
+        self.samples = dataset
         self.transform = transform
 
     def __len__(self):
@@ -20,69 +20,67 @@ class CharDataset(Dataset):
 
     def __getitem__(self, idx):
         sample = self.samples[idx]
-        # 加载验证码图像
+        # Load CAPTCHA image and convert to grayscale
         img = cv2.imread(os.path.join(sample['captcha_path'], f"{sample['id']}.jpg"))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        # 分割验证码图像为四个部分
+        # Split image into individual characters
         split_images = split_captcha(img, num_splits=4)
         
-        # 提取每个部分的特征向量
+        # Process split images
         features = []
         for split_img in split_images:
             if self.transform:
                 split_img = self.transform(split_img)
             features.append(split_img)
         
-        # 将 features 转换为张量
+        # Convert features to tensor
         features_tensor = torch.stack(features)
         
-        # 获取候选字符的特征向量
+        # Process candidate characters
         candidate_images = []
-        for i in range(9):  # 加载9个候选字符图像
-            candidate_img = cv2.imread(os.path.join(sample['captcha_path'], f"{i}.jpg"), cv2.IMREAD_GRAYSCALE)  # 直接读取为灰度图像
+        for i in range(9):  # Load 9 candidate characters
+            candidate_img = cv2.imread(os.path.join(sample['captcha_path'], f"{i}.jpg"), cv2.IMREAD_GRAYSCALE)
             if candidate_img is None:
-                raise FileNotFoundError(f"候选字符图像 {candidate_img_path} 未找到")
+                raise FileNotFoundError(f"Candidate image {os.path.join(sample['captcha_path'], f'{i}.jpg')} not found")
             if self.transform:
                 candidate_img = self.transform(candidate_img)
             candidate_images.append(candidate_img)
         
-        candidate_features_tensor = torch.stack(candidate_images)  # 将候选字符特征转换为张量
+        candidate_features_tensor = torch.stack(candidate_images)  # Convert candidate features to tensor
         
-        # 将标签转换为字符索引数组
+        # Convert labels to indices
         label_str = sample['label']
-        label_indices = [int(c) for c in label_str]  # 转换为4位数字索引
-        
-        return features_tensor, candidate_features_tensor, torch.tensor(label_indices)  # 返回分割特征、候选特征和完整标签序列
+        label_indices = [int(c) for c in label_str]
+
+        return features_tensor, candidate_features_tensor, torch.tensor(label_indices)
 
 class CNNCharClassifier(nn.Module):
-    """基于ResNet18的多字符验证码识别模型"""
+    """ResNet18-based model for multi-character CAPTCHA recognition"""
     def __init__(self, num_classes=9, num_positions=4):
         super().__init__()
+        # Modify ResNet18 for grayscale input
         self.base_model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
         self.base_model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.base_model.fc = nn.Identity()
 
     def forward(self, x, candidates):
-        # 计算候选字符的特征相似度
+        # Process candidate features
         batch_size, num_candidates, C, H, W = candidates.shape
         candidates = candidates.view(batch_size * num_candidates, C, H, W)
         candidate_features = self.base_model(candidates)
-        candidate_features = candidate_features.view(batch_size, num_candidates, -1)
-
-        # 计算输入图像的特征
-        batch_size, num_splits, C, H, W = x.shape  # 使用实际的 C, H, W
+        
+        # Process input features
+        batch_size, num_splits, C, H, W = x.shape
         x = x.view(batch_size * num_splits, C, H, W)
         features = self.base_model(x)
-        features = features.view(batch_size, num_splits, -1)
         
-        # 计算相似度矩阵
+        # Calculate cosine similarity
         similarity_scores = torch.cosine_similarity(
-            features.unsqueeze(2),  # (batch_size, num_splits, 1, feature_dim)
-            candidate_features.unsqueeze(1),  # (batch_size, 1, num_candidates, feature_dim)
+            features.unsqueeze(2),  # Shape: (batch_size, num_splits, 1, feature_dim)
+            candidate_features.unsqueeze(1),  # Shape: (batch_size, 1, num_candidates, feature_dim)
             dim=-1
         )
-        
         return similarity_scores
 
 def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
@@ -99,20 +97,19 @@ def train_cnn(model, train_loader, val_loader, epochs=10, device='cuda'):
             optimizer.zero_grad()
             similarity_scores = model(inputs, candidates)  # (batch_size, 4, 9)
             
-            # 创建正样本掩码
+            # Calculate contrastive loss
             batch_size, num_positions, num_classes = similarity_scores.shape
             pos_mask = torch.zeros_like(similarity_scores, dtype=torch.bool)
             pos_mask[torch.arange(batch_size)[:, None], torch.arange(num_positions), labels] = True
             
-            # 获取正样本分数（形状保持为 [batch_size, 4]）
+            # Positive samples loss
             positive_scores = similarity_scores[pos_mask].view(batch_size, num_positions)
+            pos_loss = -torch.mean(positive_scores)
             
-            # 获取负样本分数（排除正样本后的所有分数）
+            # Negative samples loss
             negative_scores = similarity_scores[~pos_mask].view(batch_size, num_positions, num_classes-1)
+            neg_loss = torch.mean(negative_scores)
             
-            # 计算损失：最大化正样本相似度 + 最小化负样本相似度
-            pos_loss = -torch.mean(positive_scores)  # 最大化正样本相似度等价于最小化其负数
-            neg_loss = torch.mean(negative_scores)   # 最小化负样本相似度
             loss = pos_loss + neg_loss
             
             loss.backward()
@@ -136,11 +133,11 @@ def evaluate_cnn(model, loader, device='cuda', verbose=True):
             similarity_scores = model(inputs, candidates)  # (batch_size, 4, 9)
             preds = torch.argmax(similarity_scores, dim=2)  # (batch_size, 4)
             
-            # 计算整体正确率
+            # Calculate overall accuracy
             correct += (preds == labels).all(dim=1).sum().item()
             total += labels.size(0)
             
-            # 计算各位置正确率
+            # Calculate accuracy for each position
             for i in range(4):
                 position_correct[i] += (preds[:, i] == labels[:, i]).sum().item()
     
