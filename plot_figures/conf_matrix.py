@@ -4,7 +4,6 @@ import numpy as np
 
 conf_matrix = np.random.randint(0, 10, size=(9, 9))
 
-# 绘图
 plt.figure(figsize=(10, 8))
 sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False,
             xticklabels=[str(i) for i in range(9)],

@@ -8,7 +8,7 @@ import os
 
 
 class SiameseDataset(Dataset):
-    """适用于孪生网络的数据集"""
+    """Dataset for Siamese Network"""
     def __init__(self, base_dataset, transform=None):
         self.base_dataset = base_dataset
         self.transform = transform
@@ -28,13 +28,13 @@ class SiameseDataset(Dataset):
         
         char_img = split_images[char_pos]
         
-        # 候选字符加载
+        # Load candidate characters
         candidate_imgs = []
         for i in range(9):
             candidate_path = os.path.join(sample['captcha_path'], f"{i}.jpg")
             candidate_img = cv2.imread(candidate_path, cv2.IMREAD_GRAYSCALE)
             if candidate_img is None:
-                raise FileNotFoundError(f"候选字符图像 {candidate_path} 未找到")
+                raise FileNotFoundError(f"Candidate character image {candidate_path} not found")
             if self.transform:
                 candidate_img = self.transform(candidate_img)
             candidate_imgs.append(candidate_img)
@@ -57,11 +57,11 @@ class SiameseDataset(Dataset):
                 return candidates[idx]
 
 class SiameseNetwork(nn.Module):
-    """孪生网络"""
+    """Siamese Network"""
     def __init__(self):
         super(SiameseNetwork, self).__init__()
         
-        # 共享权重的CNN部分
+        # Shared CNN part with shared weights
         self.cnn = nn.Sequential(
             nn.Conv2d(1, 64, kernel_size=5),
             nn.ReLU(inplace=True),
@@ -75,7 +75,7 @@ class SiameseNetwork(nn.Module):
             nn.ReLU(inplace=True)
         )
         
-        # 全连接层
+        # Fully connected layer
         self.fc = nn.Sequential(
             nn.Linear(256*5*5, 1024),
             nn.ReLU(inplace=True),
@@ -94,7 +94,7 @@ class SiameseNetwork(nn.Module):
         return output1, output2
 
 class TripletLoss(nn.Module):
-    """三元组损失函数（Triplet Loss）"""
+    """Triplet Loss Function"""
     def __init__(self, margin=1.0):
         super(TripletLoss, self).__init__()
         self.margin = margin

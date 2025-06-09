@@ -1,31 +1,31 @@
 graph TD
-    A[开始实验] --> B{模型是否存在?}
-    B -- 是 --> C[加载预训练模型]
-    B -- 否 --> D[初始化SiameseNetwork]
-    D --> E[准备数据集]
-    E --> F[创建DataLoader]
-    F --> G[定义优化器Adam和损失函数ContrastiveLoss]
+    A[Start Experiment] --> B{Model Exists?}
+    B -- Yes --> C[Load Pre-trained Model]
+    B -- No --> D[Initialize SiameseNetwork]
+    D --> E[Prepare Dataset]
+    E --> F[Create DataLoader]
+    F --> G[Define Optimizer Adam and Loss Function ContrastiveLoss]
     
-    G --> H[训练循环]
-    H --> I[正样本对计算]
-    I --> J[负样本对计算]
-    J --> K[合并损失]
-    K --> L[反向传播]
-    L --> M[参数更新]
+    G --> H[Training Loop]
+    H --> I[Calculate Positive Pairs]
+    I --> J[Calculate Negative Pairs]
+    J --> K[Merge Loss]
+    K --> L[Backpropagation]
+    L --> M[Update Parameters]
     M --> H
     
-    H --> N{完成20 epoch?}
-    N -- 否 --> H
-    N -- 是 --> O[保存模型]
+    H --> N{Completed 20 Epochs?}
+    N -- No --> H
+    N -- Yes --> O[Save Model]
     
-    O --> P[评估准备]
+    O --> P[Evaluation Preparation]
     C --> P
-    P --> Q[加载测试数据集]
-    Q --> R[重组验证码数据]
-    R --> S[计算特征向量距离]
-    S --> T[统计准确率]
-    T --> U[输出单字/完整验证码准确率]
-    U --> V[结束]
+    P --> Q[Load Test Dataset]
+    Q --> R[Reorganize Captcha Data]
+    R --> S[Calculate Feature Vector Distances]
+    S --> T[Calculate Accuracy]
+    T --> U[Output Single Character/Full Captcha Accuracy]
+    U --> V[End]
 
     style A fill:#4CAF50,stroke:#388E3C,color:black
     style B fill:#FFC107,stroke:#FFA000,color:black
