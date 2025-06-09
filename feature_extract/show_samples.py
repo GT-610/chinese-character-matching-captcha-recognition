@@ -6,8 +6,8 @@ from skimage.feature import hog
 from feature_extract.feature_analysis import extract_hog_features, preprocess_image
 
 def show_features_visualization(img_path):
-    """可视化单张图片的特征提取效果"""
-    img = cv2.imread(img_path, 0)  # 灰度图
+    """Visualize feature extraction results for a single image"""
+    img = cv2.imread(img_path, 0)  # Grayscale image
     if img is None:
         return
 
@@ -33,8 +33,8 @@ def show_features_visualization(img_path):
 
 def show_samples(dataset, num_samples=5):
     """
-    随机展示num_samples个样本，展示验证码图片及其HOG特征图
-    每一行一个样本，第一列为验证码图，第二列为HOG特征图
+    Randomly display num_samples with CAPTCHA images and their HOG feature maps.
+    Each row represents one sample: first column shows CAPTCHA image, second column shows HOG features.
     """
     selected_samples = random.sample(dataset, num_samples)
 
@@ -43,15 +43,15 @@ def show_samples(dataset, num_samples=5):
     for i, sample in enumerate(selected_samples):
         print(f"Sample {i+1}: {sample['id']}")
 
-        captcha_img = cv2.imread(sample['captcha_path'], 0)  # 灰度图
+        captcha_img = cv2.imread(sample['captcha_path'], 0)  # Grayscale image
 
-        # 展示验证码图片
+        # Display CAPTCHA image
         plt.subplot(num_samples, 2, i * 2 + 1)
         plt.imshow(captcha_img, cmap='gray')
         plt.title(f"CAPTCHA\nSample {i+1}: {sample['id']}")
         plt.axis('off')
 
-        # 可视化特征
+        # Visualize HOG features
         features, hog_img = extract_hog_features(captcha_img, visualize=True)
 
         plt.subplot(num_samples, 2, i * 2 + 2)

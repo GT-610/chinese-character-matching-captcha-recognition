@@ -6,59 +6,60 @@ from torchvision import transforms
 import os
 import csv
 import matplotlib.pyplot as plt
+
 def cnn_experiment():
-    # 数据预处理
+    # Data preprocessing
     transform = transforms.Compose([
         transforms.ToPILImage(),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5], std=[0.5])
     ])
 
-    # 加载数据集
+    # Load datasets for training and testing
     train_dataset = CharDataset(load_dataset(data_root='data', train=True), transform=transform)
     test_dataset = CharDataset(load_dataset(data_root='data', train=False), transform=transform)
     
-    # 创建数据加载器
+    # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
     test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=4)
 
-    # 初始化模型
+    # Initialize the model and move it to the appropriate device (GPU if available)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = CNNCharClassifier(num_classes=10, num_positions=4).to(device)
 
-    # 训练模型
-    print("开始训练CNN模型...")
-    val_accs = []  # 用于存储验证准确率
+    # Train the model for 10 epochs
+    print("Starting training of CNN model...")
+    val_accs = []  # Store validation accuracies
     for epoch in range(10):
         train_cnn(model, train_loader, test_loader, epochs=1, device=device)
         val_acc = evaluate_cnn(model, test_loader, device)
         val_accs.append(val_acc)
-        print(f'Epoch {epoch+1}/10 | Val Acc: {val_acc:.2%}')
+        print(f'Epoch {epoch+1}/10 | Validation Accuracy: {val_acc:.2%}')
 
-    # 最终评估
+    # Final evaluation of the model
     final_acc = evaluate_cnn(model, test_loader, device, verbose=True)
-    print(f"\nCNN模型最终测试准确率: {final_acc:.2%}")
+    print(f"\nFinal test accuracy of CNN model: {final_acc:.2%}")
 
-    # 保存结果到文件
+    # Save results to files and generate plots
     save_results(val_accs, final_acc)
 
 def save_results(val_accs, final_acc):
     os.makedirs('results', exist_ok=True)
 
-    # 保存验证准确率到 CSV 文件
+    # Save validation accuracies to a CSV file
     with open('results/validation_accuracy.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['Epoch', 'Validation Accuracy'])
         for i, acc in enumerate(val_accs):
             writer.writerow([i+1, acc])
 
-    # 保存最终准确率到 CSV 文件
+    # Save final accuracy to a CSV file
     with open('results/final_accuracy.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['Final Accuracy'])
         writer.writerow([final_acc])
 
-    # 绘制各位置准确率柱状图
+    # Generate a bar plot of accuracy by position
     position_correct = [0]*4
     for i in range(4):
         position_correct[i] += (preds[:, i] == labels[:, i]).sum().item()
@@ -75,4 +76,4 @@ def save_results(val_accs, final_acc):
     plt.savefig('figures/position_accuracy_plot.png')
     plt.close()
 
-    print("结果已保存到 results 文件夹中，绘图已保存到 figures 文件夹中。")
+    print("Results saved to the 'results' folder, and plots saved to the 'figures' folder.")

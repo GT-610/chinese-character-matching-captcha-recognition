@@ -14,37 +14,37 @@ import cv2
 import os
 
 if __name__ == "__main__":
-    # 1. 读取整个数据集
+    # Load the entire dataset
     dataset = load_dataset(data_root='data')
 
-    # 2. 显示分割后的样本
-    # plot_split_results(dataset)
+    # Display split results visualization
+    plot_split_results(dataset)
 
-    # 3. 特征分析 - 可视化特征分布
-    # print("Analyzing feature distribution...")
-    # single_char_features, single_char_labels = analyze_single_char_features(dataset)
+    # Analyze feature distribution
+    print("Analyzing feature distribution...")
+    single_char_features, single_char_labels = analyze_single_char_features(dataset)
 
-    # 4. 特征分析 - 可视化具体特征
-    # print("Visualizing HOG features...")
-    # sample = dataset[random.randint(0, len(dataset)-1)]
-    # show_features_visualization(os.path.join(sample['captcha_path'], "0.jpg")) # 展示第一个分割字符的特征
+    # Visualize HOG features for a sample
+    print("Visualizing HOG features...")
+    sample = dataset[random.randint(0, len(dataset)-1)]
+    show_features_visualization(os.path.join(sample['captcha_path'], "0.jpg"))  # Feature visualization for first split character
 
-    # 5. 随机展示样本及其特征分析
-    # print("Showing sample visualizations...")
-    # show_samples(dataset, num_samples=3)
+    # Show visualizations for multiple samples
+    print("Showing sample visualizations...")
+    show_samples(dataset, num_samples=3)
     
-    # 6. KNN分类实验
-    print("\n运行KNN分类实验...")
+    # Run KNN classification experiment
+    print("\nRunning KNN classification experiment...")
     knn_experiment()
 
-    # 7. CNN分类实验
-    # print("\n运行CNN分类实验...")
-    # cnn_experiment()
+    # Run CNN classification experiment
+    print("\nRunning CNN classification experiment...")
+    cnn_experiment()
 
-    # 8. Siamese网络实验
-    # print("\n运行Siamese网络实验...")
-    # siamese_experiment(force_retrain=False)  # 设置为True可强制重新训练
+    # Run Siamese network experiment
+    print("\nRunning Siamese network experiment...")
+    siamese_experiment(force_retrain=False)  # Set True for retraining
 
-    # 9. ResNet微调实验
-    # print("\n运行ResNet微调实验...")
-    # resnet_finetune_experiment()
+    # Run ResNet fine-tuning experiment
+    print("\nRunning ResNet fine-tuning experiment...")
+    resnet_finetune_experiment()

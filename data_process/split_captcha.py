@@ -6,12 +6,12 @@ import os
 
 def split_captcha(image, num_splits=4):
     """
-    将验证码图片分割成指定数量的部分，默认为4份。
-    :param image: 验证码图片 (灰度图)
-    :param num_splits: 分割份数
-    :return: 分割后的图片列表
+    Split the captcha image into a specified number of parts, defaulting to 4.
+    :param image: Captcha image (grayscale)
+    :param num_splits: Number of splits
+    :return: List of split images
     """
-    height, width= image.shape  # 获取图像高度和宽度
+    height, width = image.shape  # Get image height and width
     
     split_width = width // num_splits
     splits = []
@@ -24,11 +24,11 @@ def split_captcha(image, num_splits=4):
 
 def plot_split_results(dataset, num_samples=5):
     """
-    绘制验证码分割结果。
-    :param dataset: 数据集
-    :param num_samples: 展示的样本数量
+    Plot the results of captcha splitting.
+    :param dataset: Dataset
+    :param num_samples: Number of samples to display
     """
-    selected_samples = dataset[:num_samples]  # 取前几个样本
+    selected_samples = dataset[:num_samples]  # Select the first few samples
 
     plt.figure(figsize=(12, 3 * num_samples))
 
@@ -37,16 +37,16 @@ def plot_split_results(dataset, num_samples=5):
         
         processed_img = preprocess_image(captcha_img)
 
-        # 分割预处理后的图片
+        # Split the preprocessed image
         splits = split_captcha(processed_img)
 
-        # 绘制原图
+        # Plot the original image
         plt.subplot(num_samples, 5, i * 5 + 1)
         plt.imshow(processed_img, cmap='gray')
         plt.title(f"Processed\nSample {i + 1}")
         plt.axis('off')
 
-        # 绘制分割后的四部分
+        # Plot the four split parts
         for j, split in enumerate(splits):
             plt.subplot(num_samples, 5, i * 5 + j + 2)
             plt.imshow(split, cmap='gray')

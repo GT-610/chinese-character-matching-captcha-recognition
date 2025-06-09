@@ -7,8 +7,9 @@ from data_process.split_captcha import split_captcha
 from models.cnn_classifier import CharDataset
 import torch.nn as nn
 import cv2
+
 def resnet_finetune_experiment():
-    # 数据预处理
+    # Data preprocessing
     transform = transforms.Compose([
         transforms.ToPILImage(),
         transforms.Resize((224, 224)),
@@ -17,23 +18,23 @@ def resnet_finetune_experiment():
         transforms.Normalize(mean=[0.5], std=[0.5])
     ])
     
-    # 加载数据集
+    # Load datasets for training and testing
     train_set = CharDataset(load_dataset(train=True), transform=transform)
     test_set = CharDataset(load_dataset(train=False), transform=transform)
     
-    # 创建数据加载器
+    # Create data loaders
     train_loader = DataLoader(train_set, batch_size=32, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=32, shuffle=False)
     
-    # 初始化模型
+    # Initialize the model and move it to the appropriate device (GPU if available)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = ResNetCharClassifier(num_classes=10, num_positions=4).to(device)
     
-    # 训练配置
+    # Training configuration
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     criterion = nn.CrossEntropyLoss()
     
-    # 训练循环
+    # Training loop
     for epoch in range(15):
         model.train()
         total_loss = 0.0
@@ -45,7 +46,7 @@ def resnet_finetune_experiment():
             optimizer.zero_grad()
             outputs = model(inputs)
             
-            # 计算每个位置的损失
+            # Calculate loss for each position
             loss = 0
             for i in range(4):
                 loss += criterion(outputs[:, i, :], labels[:, i])
@@ -54,7 +55,7 @@ def resnet_finetune_experiment():
             optimizer.step()
             total_loss += loss.item()
         
-        # 验证评估
+        # Validation evaluation
         val_acc = evaluate_resnet(model, test_loader, device)
         print(f'Epoch {epoch+1}/15 | Loss: {total_loss/len(train_loader):.4f} | Val Acc: {val_acc:.2%}')
     
@@ -77,7 +78,7 @@ def evaluate_resnet(model, loader, device):
     
     return correct / total
 
-# 数据集
+# Dataset class for character images
 class CharDataset(Dataset):
     def __init__(self, base_dataset, transform=None):
         self.base_dataset = base_dataset
@@ -91,7 +92,7 @@ class CharDataset(Dataset):
         img = cv2.imread(sample['captcha_path'] + f"/{sample['id']}.jpg", 0)
         split_images = split_captcha(img, num_splits=4)
         
-        # 处理四个字符图像
+        # Process four character images
         char_imgs = []
         labels = []
         for i in range(4):
@@ -101,10 +102,10 @@ class CharDataset(Dataset):
             char_imgs.append(char_img)
             labels.append(int(sample['label'][i]))
             
-        # 将四张单通道图片合并为四通道输入
+        # Combine four single-channel images into a four-channel input
         char_imgs = torch.cat(char_imgs, dim=0)  # [4, 224, 224]
         
-        # 添加通道维度并转置维度顺序为 [C, H, W]
+        # Add channel dimension and transpose dimensions to [C, H, W]
         char_imgs = char_imgs.unsqueeze(1).permute(1, 0, 2, 3)  # [1, 4, 224, 224]
         
         return char_imgs, torch.LongTensor(labels)

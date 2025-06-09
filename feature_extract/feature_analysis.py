@@ -10,14 +10,14 @@ from tqdm import tqdm
 from data_process.image_preprocessing import preprocess_image
 
 def extract_hog_features(image, visualize=False):
-    """提取HOG特征"""
+    """Extract HOG features"""
     if len(image.shape) > 2:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     
-    # 预处理
+    # Image preprocessing
     processed_img = preprocess_image(image)
     
-    # 缩放
+    # Resize to standard dimension
     processed_img = cv2.resize(processed_img, (64, 64), interpolation=cv2.INTER_AREA)
     
     if visualize:
@@ -38,16 +38,16 @@ def extract_hog_features(image, visualize=False):
         return features
 
 def visualize_feature_distribution(features, labels, title="Feature Distribution"):
-    """使用PCA和t-SNE可视化特征分布"""
-    # 先使用PCA降维到50维
+    """Visualize feature distribution using PCA and t-SNE"""
+    # Dimensionality reduction with PCA
     pca = PCA(n_components=50)
     pca_result = pca.fit_transform(features)
     
-    # 再使用t-SNE降维到2D
+    # Further reduction with t-SNE
     tsne = TSNE(n_components=2, perplexity=30, n_iter=300)
     tsne_result = tsne.fit_transform(pca_result)
     
-    # 可视化
+    # Visualization setup
     plt.figure(figsize=(10, 8))
     unique_labels = np.unique(labels)
     
@@ -61,28 +61,27 @@ def visualize_feature_distribution(features, labels, title="Feature Distribution
     plt.show()
 
 def analyze_single_char_features(dataset):
-    """分析单字图片的特征分布"""
+    """Analyze feature distribution of single character images"""
     all_features = []
     all_labels = []
     
-    # 带进度条的遍历
-    for sample in tqdm(dataset, desc="分析单字特征"):
+    # Process with progress bar
+    for sample in tqdm(dataset, desc="Feature analysis"):
         char_indices = list(map(int, sample['label']))
         
-        # 遍历验证码中的4个字符索引
+        # Process each character in captcha
         for idx in char_indices:
-                
             path = os.path.join(sample['captcha_path'], f"{idx}.jpg")
-            img = cv2.imread(path, 0)  # 读取为灰度图
+            img = cv2.imread(path, 0)  # Read as grayscale
             if img is None:
                 continue
                 
-            # 提取HOG特征
+            # Extract HOG features
             features = extract_hog_features(img)
             all_features.append(features)
             all_labels.append(idx) 
-            
-    # 转换为numpy数组
+    
+    # Convert to numpy arrays
     all_features = np.array(all_features)
     all_labels = np.array(all_labels)
     
