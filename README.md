@@ -18,7 +18,7 @@ Below is the original task requirement for my course.
 
 ### Data Description
 
-The training set consists of 9000 samples, numbered 0000~9999, each sample corresponds to a folder, which includes: an image with the same name as the folder, which is the captcha image containing 4 Chinese characters; 9 single-character images, numbered 0~8, which include the 4 characters in the captcha image; `train_label.txt` corresponding to the sample number and label. The data format is image.
+The training set consists of 9000 samples, numbered 0000 ~ 9999, each sample corresponds to a folder, which includes: an image with the same name as the folder, which is the captcha image containing 4 Chinese characters; 9 single-character images, numbered 0 ~ 8, which include the 4 characters in the captcha image; `train_label.txt` corresponding to the sample number and label. The data format is image.
 
 ### Task Objectives
 
