@@ -1,62 +1,55 @@
-[简体中文](README-zh.md)
+[English](README.md)
 
-# Chinese Captcha Recognition
+# 中文验证码识别
 
-This project is a part of my Machine Learning Course Design, focusing on the recognition of Chinese captcha images. The goal is to develop a machine learning model capable of accurately identifying and transcribing Chinese characters from captcha images.
+这个项目是我《机器学习课程设计》的作业，作业选题是“中文验证码图像识别”。目的是开发一个能够准确识别和转录验证码中中文字符的机器学习模型。
 
-As the course is over, I decided to open-source the project, allowing others to learn from and potentially contribute to the project.
+现在课程已结束，我决定开源该项目，希望能够帮助更多正在学习机器学习和深度学习的人。
 
-## Introduction
+数据集描述在数据集压缩文件中的 `README.md` 中。
 
-The project aims to solve the problem of recognizing Chinese captcha images, which are commonly used in web applications for security purposes. By using machine learning techniques, we aim to develop a robust system that can accurately transcribe Chinese characters from captcha images.
+## 课程原始任务要求
 
-Dataset description is in `README.md` in datasets zip file.
+### 数据说明
 
-## Course Design Task
+训练集共有 9000 个样本，序号 0000 ~ 9999，每个样本对应一个文件夹，文件夹中包含：一个与文件夹同名的图片，为验证码图片，此验证码包含 4 个中文字符；9 个单字图片，序号 0 ~ 8，其中包含验证码图片中的4个字符；`train_label.txt` 对应样例序号和标签。数据格式为图像。
 
-Below is the original task requirement for my course.
+### 任务目标
 
-### Data Description
+验证码中包含 4 个中文汉字和 9 个中文单字，要求从 9 个单字中按顺序选出验证码中的汉字，实现对 `test` 数据集的字符匹配。
 
-The training set consists of 9000 samples, numbered 0000 ~ 9999, each sample corresponds to a folder, which includes: an image with the same name as the folder, which is the captcha image containing 4 Chinese characters; 9 single-character images, numbered 0 ~ 8, which include the 4 characters in the captcha image; `train_label.txt` corresponding to the sample number and label. The data format is image.
+1. 读取对应文件中的数据。
+2. 数据预处理、特征分析、特征表示设计、可视化等。
+3. 针对字符匹配验证码，选取不同的机器学习算法，进行验证码识别，并对不同模型得到的结果进行比较分析及可视化。
+4. 结合不同的算法的特点使用准确率作为评价指标分析结果之间的差异。
 
-### Task Objectives
+## 结构
 
-The captcha contains 4 Chinese characters and 9 single Chinese characters, requiring the selection of the 4 characters in the captcha in order from the 9 single characters to achieve character matching for the `test` dataset.
+- `data_process/`: 包含数据预处理脚本。
+- `feature_extract`: 包含特征提取脚本。
+- `models/`: 存储训练好的模型和模型架构文件。
+- `experiments/`: 包含解决问题的方法。
+- `plot_figures/`: 包含绘图脚本。
+- `main.py`: 主入口。
+- `requirements.txt`: 依赖列表。
 
-1. Read the data from the corresponding files.
-2. Data preprocessing, feature analysis, feature representation design, visualization, etc..
-3. Select different machine learning algorithms for character matching captcha recognition, compare and analyze the results of different models, and visualize them.
-4. Analyze the differences between the results using accuracy as the evaluation metric based on the characteristics of different algorithms.
+## 环境配置
 
-## Structure
-
-- `data_process/`: Contains the data preprocessing scripts.
-- `feature_extract`: Contains the feature extraction scripts
-- `models/`: Stores the trained models and model architecture files.
-- `experiments/`: Contains the methods used for solving the problem.
-- `plot_figures/`: Contains the plotting scripts.
-- `main.py`: The main script for running the project.
-
-## Requirements
-
-To run this project, you will need the following dependencies:
-
-- Python 3.10+ (I'm using Python 3.12)
+- Python 3.10+（我使用的是 Python 3.12）
 - NumPy
 - Matplotlib
 - OpenCV
 - Scikit-learn
 - Seaborn
 
-## Installation
+## 安装
 
-1. Clone the repo.
-2. It's recommanded to create a virtual environment before proceeding. Either `Conda` / `Mamba` or `Virtualenv` are ok.
-3. Install the required packages. You can do this by running `pip install -r requirements.txt`.
-4. Download the dataset from the Release page, and unzip `data` folder into the repo root directory.
-5. Check and comment or uncomment the appropriate section in `main.py`.
-6. Run `python main.py`.
+1. 克隆此仓库。
+2. 建议先创建一个虚拟环境。`Conda` / `Mamba` 或者 `venv` 均可。
+3. 运行 `pip install -r requirements.txt` 以安装所需的包。
+4. 从 Release 页面下载数据集，将 `data` 文件夹解压到仓库根目录。
+5. 根据需要自行用注释方式调整 `main.py` 中的代码。
+6. 运行 `python main.py`。
 
-## License
-This project is licensed under the [MIT License](LICENSE).
+## 许可证
+本项目采用 [MIT 许可证](LICENSE)。
